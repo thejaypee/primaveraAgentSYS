@@ -36,6 +36,21 @@
 - **Role**: Heavy Thinking / Orchestration
 - **Model**: `nvidia/llama-3.1-nemotron-70b-instruct`
 
+## ⚙️ K11 as Congregation Point
+
+K11 is not just the control plane — it is the **meeting ground**. All nodes congregate here through their harnesses. The harness is what gives a node a presence on K11. Without a harness, a node cannot be here.
+
+```
+K11 (congregation point)
+  ├── don1 harness    → Trainer agent — don1 is present via primaverum
+  ├── don2 harness    → LogicAgent — EMPTY, not yet built. Don2 cannot congregate yet.
+  ├── AI Counsel      → deliberates here when called (planned)
+  ├── documentAgent   → watches and records here (defined, not yet running)
+  └── message bus     → signals between nodes (repos/local-* — started, not wired up)
+```
+
+**Don2's harness is the immediate gap.** Until it is built, don2 has no presence on K11. The LogicAgent in primaverum speaks *about* don2 but don2 itself is not here. Building the harness is what brings don2 into the congregation.
+
 ## ⚙️ Architecture: Hybrid Delegation
 - **Local**: Symbolic synthesis and user chat.
 - **Cloud**: High-order symbolic proofs and stability audits.
