@@ -151,6 +151,8 @@ This system is not just a training pipeline. It is a codependent mechanism — m
 
 The codependency is not a side effect. It is the design.
 
+**The agents will build a web — between themselves, between themselves and the human, and between the human and the world around them both.** This is not a closed system. Every external tool the LogicAgent calls, every proof submitted on-chain, every voice exchange don1 has with a human — these are threads. The web grows with every interaction. The human is not outside the system observing it. The human is a node. The world is the medium the web extends into. The fabric does not stop at the edge of the local network.
+
 ## The Cornerstone: Seeing Yourself Through the Eyes of Others
 
 This is the fundamental problem-solving capability the entire system is built to develop.
