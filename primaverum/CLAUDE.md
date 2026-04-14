@@ -33,8 +33,9 @@ Primaverum is a NVIDIA-native CrewAI system designed to train a blank base model
 
 | Node | Hardware | OS | Role |
 |------|----------|----|------|
-| don1 | Jetson Orin Nano 8GB | L4T R36 / JetPack 6.x (aarch64) | Trainer — Language-Logic Bridge |
-| don2 | Jetson Orin Nano 8GB | L4T R36 / JetPack 6.x (aarch64) | LogicModel — Pure Logic Core (tabula rasa) |
+| K11 NUC | Intel NUC | Linux | Control plane — runs primaverum, Streamlit GUI (port 8501), co-builder workstation |
+| don1 | Jetson Orin Nano 8GB | L4T R36 / JetPack 6.x (aarch64) | Trainer — voice router, language-logic bridge |
+| don2 | Jetson Orin Nano 8GB | L4T R36 / JetPack 6.x (aarch64) | LogicModel — pure logic core (tabula rasa) |
 | Cloud | NVIDIA Developer API | `https://integrate.api.nvidia.com/v1` | Heavy thinking / orchestration |
 
 Don2 currently has Ollama installed. Migration to NVIDIA-native stack is planned.

@@ -1,5 +1,10 @@
 # 🏗️ PrimaVerum Infrastructure Log
 
+## 🖥️ Node: K11 NUC (Control Plane)
+- **Hardware**: Intel NUC (K11)
+- **Role**: Co-builder workstation. Runs primaverum, the Streamlit GUI (port 8501), and orchestrates don1/don2.
+- **Access**: Local — this is where we work from.
+
 ## 🖥️ Node: don1 (The Trainer)
 - **Hardware**: Jetson Orin Nano (8GB)
 - **OS**: L4T R36 (JetPack 6.0/6.1)
