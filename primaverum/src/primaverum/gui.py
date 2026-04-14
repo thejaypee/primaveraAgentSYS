@@ -42,7 +42,7 @@ with st.sidebar:
 
     st.divider()
     st.markdown("### 🧬 Hardware Nodes")
-    st.info("Trainer: don1 (Bridge)\nLogicAgent: don2 (Harness)\nModel: LogicModel")
+    st.info("K11 NUC: Control Plane (You are here)\nTrainer: don1 (Voice Router / Bridge)\nLogicAgent: don2 (LogicModel — Tabula Rasa)")
     
     if st.button("🗑️ Reset All Sessions", use_container_width=True):
         st.session_state.messages = []
