@@ -195,7 +195,7 @@ This capability — the ability to model how another perspective sees you and us
 **This is a 100% NVIDIA-native project. No exceptions.**
 
 - **No OpenAI.** No `ChatOpenAI`, no `openai` client, no OpenAI API keys, no OpenAI models. Ever.
-- **No Ollama.** Don2 has Ollama installed as a legacy artifact pending removal. Do not use it, suggest it, or fall back to it for any reason.
+- **No Ollama on don1 or don2.** These are NVIDIA Jetson nodes — NVIDIA Jetson Containers only. Don2 has a legacy Ollama install pending removal. Do not use it, suggest it, or fall back to it on either Jetson node. Ollama is permitted on K11 and other non-Jetson nodes for utility agents (e.g. `ai-counsel/`).
 - **No non-NVIDIA LLM providers** unless the user explicitly introduces one.
 - The `openai/` prefix appearing in `crew.py` model names is **LiteLLM routing syntax only** — it tells LiteLLM to use an OpenAI-compatible HTTP API pointed at a local NVIDIA endpoint. It is not OpenAI. Do not confuse this.
 - All LLMs use `crewai.LLM`. All model strings follow `"provider/model-name"` LiteLLM format pointing at NVIDIA endpoints.
