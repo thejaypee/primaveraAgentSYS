@@ -36,6 +36,36 @@
 - **Role**: Heavy Thinking / Orchestration
 - **Model**: `nvidia/llama-3.1-nemotron-70b-instruct`
 
+## 🧵 The Harness as Fabric
+
+The harness is not a point-to-point connection. It is a **fabric** — it stretches across the entire distributed system, through the middle and all the geometry. Every container in the network connects to it through its own adapter. The fabric is what makes congregation possible.
+
+```
+                    [ HARNESS FABRIC ]
+                   /        |         \
+          don1-adapter  don2-adapter  future-adapters
+              |              |
+           don1           don2 (harness empty — not yet woven in)
+```
+
+**Containers are the unit.** Each node exposes its capabilities through a containerized adapter to the fabric. The harness fabric carries signals between them. No container talks directly to another — everything passes through the fabric.
+
+**Surgical placement.** Each agent/container does not connect to the fabric arbitrarily — it enters at its best geometric position to interact with what it needs to interact with. The adapter is placed precisely where the agent's capabilities meet the fabric's signal flow. Wrong position = wrong interaction surface = wasted capability.
+
+**The harness is multidimensional.** Via software, it can transport any model into the role of the agent it is operating. The model is not the agent — the harness is what gives it an agent identity, a position in the fabric, and a job. Swap the model behind the adapter, and the agent's presence in the congregation remains. This is the mechanism by which the LogicModel can be retrained, upgraded, or replaced without dismantling the fabric.
+
+**Container system:** NVIDIA Workbench (`nvwb-cli`) is the candidate for container management across Jetson nodes. It has its own security model and CLI conventions — use `nvwb-cli` exclusively for container operations on don1/don2. Never raw Docker/podman on those nodes.
+
+**Repository master record — MyBook NAS:**
+All nodes pull from and push to the MyBook (NAS on local network, 192.168.2.x) as the master record. Two purposes:
+1. Backup — all state lives on MyBook before anywhere else
+2. Single source of truth — nodes sync to MyBook, not to each other directly
+
+MyBook hostname not currently resolving — needs to be located on the local network (likely 192.168.2.89, .221, or .191) and configured.
+
+**Message bus infrastructure (`~/repos/local-*`):**
+A broker/dispatch/relay/parser/archive system was started as the fabric's signal layer. Not yet wired up. These repos are the congregation infrastructure — the internal communication layer between node adapters.
+
 ## ⚙️ K11 as Congregation Point
 
 K11 is not just the control plane — it is the **meeting ground**. All nodes congregate here through their harnesses. The harness is what gives a node a presence on K11. Without a harness, a node cannot be here.
@@ -51,6 +81,10 @@ K11 (congregation point)
 
 **Don2's harness is the immediate gap.** Until it is built, don2 has no presence on K11. The LogicAgent in primaverum speaks *about* don2 but don2 itself is not here. Building the harness is what brings don2 into the congregation.
 
+**Isolation principle — one container, one crash domain.** Every agent runs in its own container. No single agent failure can cascade and bring down the congregation. Each container is a fault boundary.
+
+**Circuit breaker.** The AI Counsel is not just deliberative — it is the fallback layer. When an agent fails, the circuit breaker routes to the next best available agent from the Counsel. The Counsel always has a quorum as long as any member is running. Path: `~/ai-counsel/` — being built on K11 using Ollama (local K11 models, not Jetson-dependent). Resource-conscious: Counsel agents are lightweight deliberators, not heavy inference engines.
+
 ## ⚙️ Architecture: Hybrid Delegation
 - **Local**: Symbolic synthesis and user chat.
 - **Cloud**: High-order symbolic proofs and stability audits.
@@ -64,6 +98,15 @@ The distributed compute network routes workloads to best-fit specialized agents.
 Every future specialized agent follows the same pattern: trained in a forge like primaverum, deployed into meshOS.
 
 **Not using Exo** — meshOS uses its own orchestration layer, not Exo's distributed inference cluster.
+
+---
+
+## 🏛️ Planned Systems (not yet built)
+
+| System | Path | Purpose | Status |
+|--------|------|---------|--------|
+| AI Counsel | `~/ai-counsel/` | Deliberative body + circuit breaker. High-stakes decisions, agent failover. Ollama on K11, isolated containers. | Blueprint defined |
+| AI Academy | `~/ai-academy/` | Generalized training framework — what primaverum is for the LogicModel, for all agents. | Placeholder only |
 
 ---
 
