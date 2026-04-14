@@ -21,7 +21,7 @@
 - **Role**: Pure Logic Core
 - **Access**: SSH alias `don2` (Certs integrated)
 - **Details**:
-  - Contains existing Ollama installation (to be migrated to NVIDIA Native).
+  - Contains a legacy Ollama installation. **This is being removed and replaced with NVIDIA-native stack. Ollama is not used by primaverum.**
 
 ## ☁️ Cloud: NVIDIA Developer API
 - **Endpoint**: `https://integrate.api.nvidia.com/v1`

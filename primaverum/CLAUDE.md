@@ -87,9 +87,14 @@ DON2_URL=http://don2:8000/v1  # Default: don2 local node
 - **Don2 receives only from Don1.** Tabula rasa. It has no direct human interface. Everything that enters it has already been translated into formal logic by Don1.
 - **This is a permanent three-way relationship: the human, don1, and don2.** Not a pipeline. Not session-based. Always active. The human provides intent; don1 renders it as logic and speaks it to don2; don2 grows and teaches don1 how to speak to it better. All three pull each other forward.
 
-## Constraints
+## Hard Rules
 
-- **Never use `ChatOpenAI` or any raw OpenAI client.** Always use `crewai.LLM` or LiteLLM string shorthand (`"provider/model"`).
+**This is a 100% NVIDIA-native project. No exceptions.**
+
+- **No OpenAI.** No `ChatOpenAI`, no `openai` client, no OpenAI API keys, no OpenAI models. Ever.
+- **No Ollama.** Don2 has Ollama installed as a legacy artifact pending removal. Do not use it, suggest it, or fall back to it for any reason.
+- **No non-NVIDIA LLM providers** unless the user explicitly introduces one.
+- The `openai/` prefix appearing in `crew.py` model names is **LiteLLM routing syntax only** — it tells LiteLLM to use an OpenAI-compatible HTTP API pointed at a local NVIDIA endpoint. It is not OpenAI. Do not confuse this.
+- All LLMs use `crewai.LLM`. All model strings follow `"provider/model-name"` LiteLLM format pointing at NVIDIA endpoints.
 - Agent and task method names in `crew.py` must exactly match the keys in `agents.yaml` and `tasks.yaml`.
 - Always add `# type: ignore[index]` when accessing config dicts in crew classes.
-- The `openai/` prefix in local model names is LiteLLM syntax for OpenAI-compatible APIs — it does not mean OpenAI is being used.
