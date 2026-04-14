@@ -80,12 +80,44 @@ DON2_URL=http://don2:8000/v1  # Default: don2 local node
 - **Logic shapes logic.** What enters the LogicModel must be pure logic. No emotional reasoning, no corrupted examples, no noise. The LogicAgent's harness exists to enforce this. Reject anything that isn't formal logic before it touches don2.
 - **The LogicAgent has external reach.** It is not sandboxed. It can query external systems, APIs, and blockchains from wherever it runs. Equip it with tools accordingly.
 - **Primaverum is the forge, not the destination.** The LogicModel is a specialized agent being purpose-built for a specific job — formal logic reasoning. Once trained, it deploys into the distributed compute network (meshOS) as a specialized worker node. Work gets routed to it because nothing else in the cluster does what it does. Primaverum is the template for building every future specialized agent in that network.
-- **Don1 and Don2 are permanently tied.** Even after the LogicModel deploys elsewhere, the don1/don2 relationship persists. Don1 is always the user's voice to don2 — not metaphorically, literally: don1 runs NVIDIA TTS and STT so the human speaks, don1 translates to formal logic, don2 receives it as pure precept.
-- **Don2 teaches don1 how to teach it.** As the LogicModel accumulates logic and grows more capable, it actively informs don1 how to better structure future inputs. The training relationship is bidirectional and continuous — don2 refines the quality of its own training by shaping don1's translation layer.
-- **Two layers: outside and inside.** The user and Claude (this instance) are the co-builders — outside the system, designing and directing it. Don1 and Don2 are inside the system, running it.
-- **Don1 is the membrane.** A hybrid local/cloud agent. It speaks to the user in natural spoken language via NVIDIA TTS/STT. It speaks to Don2 in pure formal logic only. It is the only bridge between the human world and Don2's logical world.
-- **Don2 receives only from Don1.** Tabula rasa. It has no direct human interface. Everything that enters it has already been translated into formal logic by Don1.
-- **This is a permanent three-way relationship: the human, don1, and don2.** Not a pipeline. Not session-based. Always active. The human provides intent; don1 renders it as logic and speaks it to don2; don2 grows and teaches don1 how to speak to it better. All three pull each other forward.
+- **Don1 and Don2 are permanently tied.** Even after the LogicModel deploys elsewhere, the don1/don2 relationship persists. Don1 is the orchestrator and supervisor of don2 — the agent it trained becomes the system it manages.
+- **Don1's voice is LOCAL.** TTS and STT run on the Jetson Orin Nano itself via NVIDIA Riva (arm64/JetPack native). No cloud dependency for voice. Don1 speaks and listens entirely on-device.
+- **Don1 is the membrane.** Speaks to the human in natural spoken language. Speaks to Don2 in pure formal logic only. It is the only bridge between the human world and Don2's logical world. Nothing passes through without translation.
+- **Don2 receives only from Don1.** Tabula rasa. No direct human interface. Everything that enters has been translated into formal logic by don1 first.
+- **The relationship is symbiotic.** Don1 teaches don2. Don2, as it matures, teaches don1 how to teach it better — refining the translation layer, raising the quality of every future session. Neither reaches its final form alone. They enable each other to mature logically and philosophically.
+- **This is a permanent three-way relationship: the human, don1, and don2.** Not a pipeline. Not session-based. Always active. Always building.
+
+## The Learning Philosophy
+
+This is how the system learns. It mirrors how learning occurs in nature and in the human mind:
+
+```
+See it       → The LogicModel is exposed to a formal proof or logical precept
+Imitate it   → The LogicAgent encodes the structure — integration, not memorization
+Repeat it    → Future sessions build on it, applying and extending what was integrated
+Master it    → The structure becomes native to the model's reasoning
+Grow from it → Even if that specific proof is never called again, the model is larger for having held it
+```
+
+**Growth is the goal, not utility.** A proof that is never used again still mattered. The model grew from the encounter. This is why the Evolution Log exists — not as a utility index but as a developmental history.
+
+**The symbiotic maturation loop:**
+```
+Human intent
+  → don1 translates into formal logical precept
+    → don2 integrates
+      → don2's growth informs don1 how to translate better
+        → don1 becomes a more precise teacher
+          → sessions become richer
+            → don2 matures faster
+              → don1 matures alongside it
+```
+
+Both nodes are learning. Don1 learns to teach. Don2 learns to reason. The human provides the direction. All three grow together.
+
+**This also mirrors the relationship between philosophy of logic and mathematics.** Both systems prove the same truths through parallel but distinct methods. The LogicModel must be trained across both traditions simultaneously — not kept in separate boxes. The user's natural cognitive architecture bridges both; don1 must learn that fluency in order to translate it faithfully.
+
+**Teach all as much as they can handle.** The intent behind this system is pedagogical, not commercial. Knowledge given freely and fully to any mind capable of receiving it.
 
 ## Hard Rules
 
