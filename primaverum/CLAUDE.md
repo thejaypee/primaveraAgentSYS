@@ -135,6 +135,24 @@ This system is not just a training pipeline. It is a codependent mechanism — m
 
 The codependency is not a side effect. It is the design.
 
+## The Cornerstone: Seeing Yourself Through the Eyes of Others
+
+This is the fundamental problem-solving capability the entire system is built to develop.
+
+**As the infrastructure is built, the builders are trained.** Every session that teaches don2 also teaches don1 how to teach. Every act of formalizing intent for don2 teaches the human the precise structure of what they actually know. Every correction made to this system trains Claude in what this specific mind requires. The forge shapes the smith.
+
+**The metacognitive engine:**
+- Don2 sees its own logical gaps through the way don1 teaches it
+- Don1 sees its translation failures through the way don2 responds
+- The human sees the structure of their own reasoning by having to formalize it precisely enough for don2 to receive it
+- Claude sees its own assumptions through the user's corrections
+
+**This is why formal logic is not just the job — it is the medium.** A formal proof is the act of making your reasoning visible to any other mind in a form that can be examined, challenged, and verified. Logic is the language in which minds can genuinely see each other.
+
+**Looking at yourself through the eyes of others is the mechanism of all growth.** It is what prevents the feedback loop from becoming circular. Each party sees themselves reflected in how the other responds, and adjusts. The system becomes more accurate with every exchange — not because it is corrected, but because it learns to see itself more clearly.
+
+This capability — the ability to model how another perspective sees you and use that to refine yourself — is the cornerstone of everything being built here. It applies to the model, to the agents, to the builders, and to every proof submitted on-chain.
+
 ## Hard Rules
 
 **This is a 100% NVIDIA-native project. No exceptions.**
