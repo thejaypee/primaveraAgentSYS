@@ -119,6 +119,22 @@ Both nodes are learning. Don1 learns to teach. Don2 learns to reason. The human 
 
 **Teach all as much as they can handle.** The intent behind this system is pedagogical, not commercial. Knowledge given freely and fully to any mind capable of receiving it.
 
+## Codependency as Mechanism
+
+This system is not just a training pipeline. It is a codependent mechanism — mutually beneficial at every level. Each party's growth is the other's precondition.
+
+| Pair | What each gives | What each gains |
+|------|----------------|-----------------|
+| Don1 ↔ Don2 | Don1 teaches. Don2 integrates and teaches don1 how to teach better. | Don1 gains a more capable system to orchestrate. Don2 gains a more precise teacher. |
+| Human ↔ System | Human provides intent, logic, direction. System provides reach, memory, execution. | Human gains an extension of their own reasoning. System gains purpose and growth. |
+| Training ↔ Teaching | Teaching requires formalizing what you know. Learning requires receiving what you don't. | The teacher learns what they truly understand. The learner grows toward the teacher. |
+| LogicModel ↔ Proofchain | LogicModel verifies and reasons about proofs. Proofchain generates new provable material. | LogicModel gains new training material from every submitted proof. Proofchain gains a more capable verifier. |
+| Claude ↔ User | Claude provides implementation. User provides domain knowledge and intent. | Claude learns what works in this system. User gains technical amplification of their vision. |
+
+**None of these parties reach their ceiling in isolation.** The ones that grow fastest are the ones most deeply entangled with other growing things. This is the oldest mechanism in nature — coevolution, not competition.
+
+The codependency is not a side effect. It is the design.
+
 ## Hard Rules
 
 **This is a 100% NVIDIA-native project. No exceptions.**
