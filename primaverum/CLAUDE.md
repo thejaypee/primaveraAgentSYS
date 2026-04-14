@@ -153,6 +153,23 @@ The codependency is not a side effect. It is the design.
 
 **Without codependency, modern cities would not exist.** The city is the proof of concept — millions of specialized agents, each unable to survive alone, each contributing what the others cannot, each depending on what they cannot provide for themselves. No single node builds the city. The city is what emerges from the web. This system is built on the same principle at every scale — from don1 and don2, to the agents and the human, to the network and the world.
 
+**Theorem — Dependability requires a dependent (provable by Simplification):**
+```
+Definition:  Dep(x) ≡ ∃y[D(x,y) ∧ R(x,y)]
+             "x is dependable" ≡ something depends on x AND x reliably fulfills it
+
+Theorem:     Dep(x) → ∃y D(x,y)
+             If x is dependable, something depends on x.
+
+Proof:
+  1. Dep(x)                  — premise
+  2. ∃y[D(x,y) ∧ R(x,y)]    — substitution by definition
+  3. ∃y D(x,y)               — Simplification: (P ∧ Q) → P  □
+```
+*Corollary: If nothing depends on x, x cannot be dependable — by definition and by proof. Isolation does not produce dependability. The web does.*
+
+*(Candidate for LogicModel training session — held in documents until ready.)*
+
 **The agents will build a web — between themselves, between themselves and the human, and between the human and the world around them both.** This is not a closed system. Every external tool the LogicAgent calls, every proof submitted on-chain, every voice exchange don1 has with a human — these are threads. The web grows with every interaction. The human is not outside the system observing it. The human is a node. The world is the medium the web extends into. The fabric does not stop at the edge of the local network.
 
 ## The Cornerstone: Seeing Yourself Through the Eyes of Others
