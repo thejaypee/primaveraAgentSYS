@@ -40,6 +40,16 @@
 - **Local**: Symbolic synthesis and user chat.
 - **Cloud**: High-order symbolic proofs and stability audits.
 
+## 🕸️ Deployment Destination — meshOS Distributed Compute
+
+Primaverum trains the LogicModel. meshOS is where it gets deployed.
+
+The distributed compute network routes workloads to best-fit specialized agents. The LogicModel is being purpose-built as the **logic reasoning specialist** in that network. Once trained, it joins as a worker node — work requiring formal logic gets routed to it.
+
+Every future specialized agent follows the same pattern: trained in a forge like primaverum, deployed into meshOS.
+
+**Not using Exo** — meshOS uses its own orchestration layer, not Exo's distributed inference cluster.
+
 ---
 
 ## 🧬 Don1 Digital Twin Roadmap — NVIDIA ACE
