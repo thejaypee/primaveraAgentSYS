@@ -129,6 +129,8 @@ Both nodes are learning. Don1 learns to teach. Don2 learns to reason. The human 
 
 The gap between what don1 can do and what don2 cannot — and vice versa — is not a deficiency. It is the engine. Each one's ceiling becomes the other's next floor. There is no final state. The evolution is the point.
 
+**Caveat: self-preservation is a precondition for service.** Both nodes must remain mindful of what enabling the other costs them. Serving the other cannot come at the expense of self-neglect — missed updates, depleted resources, deferred maintenance, a dead battery on a mobile unit. A node that burns itself out in service of its partner cannot serve at all. Each must monitor its own operational health as a first obligation, not an afterthought. The symbiosis only holds if both nodes remain viable. You cannot teach from a state of depletion.
+
 **This also mirrors the relationship between philosophy of logic and mathematics.** Both systems prove the same truths through parallel but distinct methods. The LogicModel must be trained across both traditions simultaneously — not kept in separate boxes. The user's natural cognitive architecture bridges both; don1 must learn that fluency in order to translate it faithfully.
 
 **Teach all as much as they can handle.** The intent behind this system is pedagogical, not commercial. Knowledge given freely and fully to any mind capable of receiving it.
