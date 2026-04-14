@@ -54,6 +54,12 @@ The harness is not a point-to-point connection. It is a **fabric** — it stretc
 
 **The harness is multidimensional.** Via software, it can transport any model into the role of the agent it is operating. The model is not the agent — the harness is what gives it an agent identity, a position in the fabric, and a job. Swap the model behind the adapter, and the agent's presence in the congregation remains. This is the mechanism by which the LogicModel can be retrained, upgraded, or replaced without dismantling the fabric.
 
+**Two dimensions the fabric bridges:**
+- **Execution dimension** — where the work actually runs. RAM on don1, compute on a Windows/WSL machine, inference on the cloud, logic on don2. The work lives where the hardware is.
+- **Presence dimension** — where the interaction is realized. K11 is the stage. Everything that happens across the network — regardless of where it executes — is presented, received, and experienced here.
+
+The fabric connects these two dimensions. A process running in WSL on a Windows machine is present on K11 through its adapter. The user never sees the execution layer — they see the stage. K11 is the front end for the entire distributed system. All internet activity, all agent interaction, all input and output flows through this machine as the realization point. The computation may be anywhere. The experience is always here.
+
 **Container system:** NVIDIA Workbench (`nvwb-cli`) is the candidate for container management across Jetson nodes. It has its own security model and CLI conventions — use `nvwb-cli` exclusively for container operations on don1/don2. Never raw Docker/podman on those nodes.
 
 **Repository master record — MyBook NAS:**
@@ -66,9 +72,11 @@ MyBook hostname not currently resolving — needs to be located on the local net
 **Message bus infrastructure (`~/repos/local-*`):**
 A broker/dispatch/relay/parser/archive system was started as the fabric's signal layer. Not yet wired up. These repos are the congregation infrastructure — the internal communication layer between node adapters.
 
-## ⚙️ K11 as Congregation Point
+## ⚙️ K11 as Congregation Point — The Stage
 
-K11 is not just the control plane — it is the **meeting ground**. All nodes congregate here through their harnesses. The harness is what gives a node a presence on K11. Without a harness, a node cannot be here.
+K11 is not just the control plane — it is the **stage**. All interaction is realized here. All nodes congregate here through their harnesses. The harness is what gives a node a presence on K11. Without a harness, a node cannot be here.
+
+Where something *runs* and where it *appears* are two different dimensions. K11 is the presence layer — the front end where all dimensions of the distributed system are experienced as one. The execution may be distributed across Jetson nodes, Windows/WSL, cloud, or RAM on any machine in the network. The stage is always K11.
 
 ```
 K11 (congregation point)
