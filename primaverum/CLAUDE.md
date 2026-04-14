@@ -38,7 +38,7 @@ Primaverum is a NVIDIA-native CrewAI system designed to train a blank base model
 | don2 | Jetson Orin Nano 8GB | L4T R36 / JetPack 6.x (aarch64) | LogicModel — pure logic core (tabula rasa) |
 | Cloud | NVIDIA Developer API | `https://integrate.api.nvidia.com/v1` | Heavy thinking / orchestration |
 
-Don2 currently has Ollama installed. Migration to NVIDIA-native stack is planned.
+Both Jetson nodes run LLMs via **Jetson Containers** (`jetson-containers` + `nano_llm`). This is the NVIDIA-native inference stack for Jetson Orin. Don2 has a legacy Ollama install being removed.
 
 ### The Three LLMs (`crew.py`)
 
