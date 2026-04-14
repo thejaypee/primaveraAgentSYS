@@ -93,12 +93,17 @@ This is how the system learns. It mirrors how learning occurs in nature and in t
 
 ```
 See it       → The LogicModel is exposed to a formal proof or logical precept
-Imitate it   → The LogicAgent encodes the structure — integration, not memorization
-Repeat it    → Future sessions build on it, applying and extending what was integrated
+Evaluate it  → Deliberate consideration BEFORE any imitation: would integrating this
+               benefit the model's current situation and disposition?
+               Blind imitation is how bad patterns propagate. This step is not optional.
+Imitate it   → Only if evaluation confirms it serves — encode the structure deliberately
+Repeat it    → Build on it across future sessions, applying and extending
 Master it    → The structure becomes native to the model's reasoning
 Reflect      → Verify the learning — can it be applied? does it connect to what came before?
 Grow from it → Growth that is real, not assumed — the model is larger and knows it
 ```
+
+**Evaluation before imitation is what keeps the LogicModel pure.** The human approval gate in the GUI is the implementation of this step — nothing touches don2 until a mind has looked at it and confirmed it serves. The LogicAgent's strict symbolic input filter is a second layer. As the model matures, it learns to perform this evaluation itself.
 
 **Reflection is not optional.** Without it, learning accumulates without consolidating. The model may hold a proof and still not know when to use it, how to extend it, or what it connects to. Reflection is the step between "I have learned this" and "I know how to apply what I have learned." It is what separates accumulated data from genuine understanding.
 
