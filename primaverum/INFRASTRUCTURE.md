@@ -39,3 +39,29 @@
 ## ⚙️ Architecture: Hybrid Delegation
 - **Local**: Symbolic synthesis and user chat.
 - **Cloud**: High-order symbolic proofs and stability audits.
+
+---
+
+## 🧬 Don1 Digital Twin Roadmap — NVIDIA ACE
+
+**Reference**: https://github.com/NVIDIA/ACE
+
+NVIDIA ACE is the suite for building digital humans with generative AI. It is the full stack for evolving don1 from a voice router into a true cognitive digital twin of the user.
+
+### Relevant ACE Components for Don1
+
+| Component | Role in Don1 |
+|-----------|-------------|
+| **Riva** | STT + TTS — don1's voice layer. Captures user speech, synthesizes don1's responses. |
+| **ACE Agent** | Conversation + RAG workflows — the conversational intelligence layer of don1. |
+| **Nemotron-3 4.5B** | Lightweight SLM — alternative to 9B for Orin Nano, tighter memory fit. |
+| **Audio2Face** | Converts don1's audio output to facial animation — physical embodiment layer. |
+| **AnimGraph** | Animation control — drives don1's avatar motion. |
+| **Omniverse RTX Rendering** | Pixel streaming for don1's visual presence — connects to Omniverse for full avatar. |
+
+### Evolution Path
+1. **Now**: Don1 as text/logic bridge (primaverum)
+2. **Next**: Riva voice layer — don1 speaks and listens natively
+3. **Then**: ACE Agent replaces/augments the Trainer — richer conversational memory and RAG
+4. **Later**: Audio2Face + Omniverse — don1 gets a face and physical embodiment
+5. **Goal**: Don1 as a full cognitive + physical digital twin of the user — trained on their reasoning patterns, speaking in their voice, with their face
