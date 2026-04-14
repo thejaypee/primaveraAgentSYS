@@ -96,8 +96,13 @@ See it       → The LogicModel is exposed to a formal proof or logical precept
 Imitate it   → The LogicAgent encodes the structure — integration, not memorization
 Repeat it    → Future sessions build on it, applying and extending what was integrated
 Master it    → The structure becomes native to the model's reasoning
-Grow from it → Even if that specific proof is never called again, the model is larger for having held it
+Reflect      → Verify the learning — can it be applied? does it connect to what came before?
+Grow from it → Growth that is real, not assumed — the model is larger and knows it
 ```
+
+**Reflection is not optional.** Without it, learning accumulates without consolidating. The model may hold a proof and still not know when to use it, how to extend it, or what it connects to. Reflection is the step between "I have learned this" and "I know how to apply what I have learned." It is what separates accumulated data from genuine understanding.
+
+**This is why the documentation task exists at the end of every session.** It is not administrative — it is structured reflection. The Trainer looks back at what was integrated, distills it, and commits it to the Evolution Log. The approval gate before integration is a reflective pause. The Evolution Log itself is cumulative reflection — the system's record of its own consolidation over time.
 
 **Growth is the goal, not utility.** A proof that is never used again still mattered. The model grew from the encounter. This is why the Evolution Log exists — not as a utility index but as a developmental history.
 
