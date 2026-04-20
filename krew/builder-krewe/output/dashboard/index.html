@@ -240,8 +240,52 @@
                          lc:{x:r.left-cr.left,y:my}, rc:{x:r.right-cr.left,y:my} }[c];
             };
 
-            const CYCLE  = 6;    // seconds per 4-ping round
-            const TRAVEL = 0.7;  // seconds a pulse takes to traverse the line
+            const CYCLE    = 8;    // total seconds for 4 ping+reply cycles
+            const TRAVEL   = 0.55; // seconds to cross the line
+            const GAP      = 0.12; // pause between ping arriving and reply departing
+            const INTERVAL = CYCLE / 4;
+
+            const addPulse = (pathId, beginSec, fill, fwd, lost) => {
+                const dot = document.createElementNS(NS, 'circle');
+                dot.setAttribute('r', '3.5');
+                dot.setAttribute('fill', fill);
+                dot.setAttribute('opacity', '0');
+
+                const motion = document.createElementNS(NS, 'animateMotion');
+                motion.setAttribute('dur',         `${CYCLE}s`);
+                motion.setAttribute('begin',       `${beginSec.toFixed(3)}s`);
+                motion.setAttribute('repeatCount', 'indefinite');
+                motion.setAttribute('calcMode',    'linear');
+                motion.setAttribute('keyTimes',    `0;0.001;${(TRAVEL/CYCLE).toFixed(4)};1`);
+                motion.setAttribute('keyPoints',   fwd ? '0;0;1;1' : '1;1;0;0');
+                const mp = document.createElementNS(NS, 'mpath');
+                mp.setAttributeNS(XNS, 'href', `#${pathId}`);
+                motion.appendChild(mp);
+
+                const fade = document.createElementNS(NS, 'animate');
+                fade.setAttribute('attributeName', 'opacity');
+                if (lost) {
+                    // Turn red and vanish halfway — no reply
+                    fade.setAttribute('values',   '0;1;1;0;0');
+                    fade.setAttribute('keyTimes', `0;0.01;${(TRAVEL*0.45/CYCLE).toFixed(4)};${(TRAVEL*0.52/CYCLE).toFixed(4)};1`);
+                    const toRed = document.createElementNS(NS, 'animate');
+                    toRed.setAttribute('attributeName', 'fill');
+                    toRed.setAttribute('values',   `${fill};#ef4444`);
+                    toRed.setAttribute('keyTimes', `0;${(TRAVEL*0.35/CYCLE).toFixed(4)}`);
+                    toRed.setAttribute('dur', `${CYCLE}s`); toRed.setAttribute('begin', `${beginSec.toFixed(3)}s`);
+                    toRed.setAttribute('repeatCount', 'indefinite');
+                    dot.appendChild(toRed);
+                } else {
+                    fade.setAttribute('values',   '0;1;0.9;0;0');
+                    fade.setAttribute('keyTimes', `0;0.01;${(TRAVEL*0.82/CYCLE).toFixed(4)};${(TRAVEL/CYCLE).toFixed(4)};1`);
+                }
+                fade.setAttribute('dur',         `${CYCLE}s`);
+                fade.setAttribute('begin',       `${beginSec.toFixed(3)}s`);
+                fade.setAttribute('repeatCount', 'indefinite');
+                dot.appendChild(motion);
+                dot.appendChild(fade);
+                svg.appendChild(dot);
+            };
 
             connections.forEach(({ from, to, fc, tc, color, structural }, i) => {
                 const a = document.getElementById(from);
@@ -255,41 +299,19 @@
                 path.id = pathId;
                 path.setAttribute('d', `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`);
                 path.setAttribute('fill', 'none');
-                // Structural lines are invisible (HTML rods draw them); diagonals are drawn here
                 path.setAttribute('stroke', structural ? 'none' : color);
                 path.setAttribute('stroke-width', structural ? '0' : '2');
                 svg.appendChild(path);
 
-                // 4 directional ping pulses staggered across the cycle
+                const live = color !== '#374151';
                 for (let j = 0; j < 4; j++) {
-                    const offset = (j * CYCLE / 4).toFixed(2);
-                    const dot = document.createElementNS(NS, 'circle');
-                    dot.setAttribute('r', '3.5');
-                    dot.setAttribute('fill', '#3b82f6');
-                    dot.setAttribute('opacity', '0');
-
-                    const motion = document.createElementNS(NS, 'animateMotion');
-                    motion.setAttribute('dur',          `${CYCLE}s`);
-                    motion.setAttribute('begin',        `${offset}s`);
-                    motion.setAttribute('repeatCount',  'indefinite');
-                    motion.setAttribute('calcMode',     'linear');
-                    motion.setAttribute('keyTimes',     `0;0.001;${(TRAVEL/CYCLE).toFixed(3)};1`);
-                    motion.setAttribute('keyPoints',    '0;0;1;1');
-                    const mp = document.createElementNS(NS, 'mpath');
-                    mp.setAttributeNS(XNS, 'href', `#${pathId}`);
-                    motion.appendChild(mp);
-
-                    const fade = document.createElementNS(NS, 'animate');
-                    fade.setAttribute('attributeName', 'opacity');
-                    fade.setAttribute('values',     `0;1;0.9;0;0`);
-                    fade.setAttribute('keyTimes',   `0;0.01;${(TRAVEL/CYCLE*0.8).toFixed(3)};${(TRAVEL/CYCLE).toFixed(3)};1`);
-                    fade.setAttribute('dur',        `${CYCLE}s`);
-                    fade.setAttribute('begin',      `${offset}s`);
-                    fade.setAttribute('repeatCount','indefinite');
-
-                    dot.appendChild(motion);
-                    dot.appendChild(fade);
-                    svg.appendChild(dot);
+                    const t0 = j * INTERVAL;
+                    if (live) {
+                        addPulse(pathId, t0,              '#3b82f6', true,  false); // outgoing
+                        addPulse(pathId, t0+TRAVEL+GAP,   '#93c5fd', false, false); // reply
+                    } else {
+                        addPulse(pathId, t0, '#3b82f6', true, true); // lost — goes red, dies mid-path
+                    }
                 }
             });
 
