@@ -123,9 +123,10 @@
                     !/pixel.?10/i.test(n.name)
                 );
 
-                // All connectors (h and v) use the same CSS length — equal spacing everywhere
+                // LAYOUT RULE: every connector (horizontal and vertical) must use GAP.
+                // Adding a new row or node? Use hline/vline — never a custom size.
+                // Change GAP once and the entire topology rebalances automatically.
                 const GAP    = 'min(4vw,48px)';
-                const LGAP   = 'min(12vw,144px)';  // long connector to bottom row
                 const row    = `display:flex;align-items:center;justify-content:center;width:100%`;
                 const hline  = `height:2px;background:#374151;width:${GAP};flex-shrink:0`;
                 const vwrap  = `display:flex;justify-content:center;width:100%`;

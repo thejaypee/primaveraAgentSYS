@@ -65,6 +65,8 @@ cd builder-krewe/output/dashboard && python3 backend.py &
 # Open http://localhost:8080
 ```
 
+**Topology layout rule:** every connector (horizontal and vertical) uses the single constant `GAP = 'min(4vw,48px)'` via `hline` and `vline`. Never use a custom size. Add new rows and nodes by reusing these variables — the topology rebalances automatically.
+
 The dashboard auto-refreshes every 30s. It discovers nodes via `tailscale status --json`, pings all peers in parallel, and SSH-queries hardware for known hosts. Jetson nodes (don1, don2) use `tegrastats` for GPU/RAM/power; K11 uses AMD sysfs at `/sys/class/drm/card1/device/`.
 
 ---
