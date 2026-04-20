@@ -87,19 +87,22 @@
                 : /pixel.?7/i.test(n.name) ? 'node-pixel7'
                 : /pixel.?10/i.test(n.name) ? 'node-pixel10' : '';
 
-            // Card: % width, aspect-ratio keeps it square
-            return `<div id="${nodeId}" style="border:1px solid ${borderColor};background:#1f2937;border-radius:10px;padding:1.2%;
+            // Card: center dot in exact center, hardware data, no ping animation
+            return `<div id="${nodeId}" style="border:1px solid ${borderColor};background:#1f2937;border-radius:10px;padding:10%;
                         width:22%;min-width:120px;max-width:200px;aspect-ratio:1/1;
                         box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;
-                        justify-content:flex-start;flex-shrink:0;position:relative;z-index:1">
-                <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+                        justify-content:center;flex-shrink:0;position:relative;z-index:1">
+                <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
+                    <span style="background:${dotColor};width:6px;height:6px;border-radius:50%;display:inline-block;"></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;position:relative;z-index:2;">
                     <span style="background:${dotColor};width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>
                     <span style="font-weight:600;font-size:13px;color:#f3f4f6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span>
                 </div>
-                <div style="font-size:10px;color:#6b7280">${osIcon} ${n.ip}</div>
+                <div style="font-size:10px;color:#6b7280;position:relative;z-index:2">${osIcon} ${n.ip}</div>
                 ${hwHtml}
                 ${ctrsHtml}
-                <div style="font-size:10px;color:${labelColor};margin-top:auto;padding-top:4px">${latency}</div>
+                <div style="font-size:10px;color:${labelColor};margin-top:8px;padding-top:4px;position:relative;z-index:2">${latency}</div>
             </div>`;
         }
 
@@ -132,12 +135,7 @@
                     !/pixel.?10/i.test(n.name)
                 );
 
-                // LAYOUT RULE: every connector (horizontal and vertical) must use GAP.
-                // Adding a new row or node? Use hl(node)/vl(node) — never a custom size.
-                // Change GAP once and the entire topology rebalances automatically.
-                // Rod color = green if the node it leads to is reachable, gray if not.
                 const GAP   = 'min(4vw,48px)';
-                // Green = SSH live; red = SSH configured but down; gray = no SSH / unreachable
                 const rc    = n => {
                     if (!n) return '#374151';
                     if (n.ssh_ok === true)  return '#4ade80';
@@ -192,130 +190,9 @@
 
                 el.style.position = 'relative';
                 el.innerHTML = html;
-
-                // Draw all connections with directional ping animations
-                requestAnimationFrame(() => drawConnections(el, [
-                    // Structural rods (pulse only, line drawn by HTML)
-                    { from: 'node-k11',      to: 'node-saulynode', fc: 'bc', tc: 'tc', color: rc(saulynode), structural: true },
-                    { from: 'node-saulynode',to: 'node-don1',       fc: 'lc', tc: 'rc', color: rc(don1),     structural: true },
-                    { from: 'node-saulynode',to: 'node-don2',       fc: 'rc', tc: 'lc', color: rc(don2),     structural: true },
-                    { from: 'node-saulynode',to: 'node-desktop',    fc: 'bc', tc: 'tc', color: rc(desktop),  structural: true },
-                    { from: 'node-desktop',  to: 'node-pixel7',     fc: 'lc', tc: 'rc', color: rc(pixel7),   structural: true },
-                    { from: 'node-desktop',  to: 'node-pixel10',    fc: 'rc', tc: 'lc', color: rc(pixel10),  structural: true },
-                    { from: 'node-desktop',  to: 'node-suiplay',    fc: 'bc', tc: 'tc', color: rc(suiplay),  structural: true },
-                    // Diagonal connections
-                    { from: 'node-k11',      to: 'node-don1',    fc: 'bl', tc: 'tr', color: rc(don1)    },
-                    { from: 'node-k11',      to: 'node-don2',    fc: 'br', tc: 'tl', color: rc(don2)    },
-                    { from: 'node-don1',     to: 'node-desktop', fc: 'br', tc: 'tl', color: rc(desktop)  },
-                    { from: 'node-don2',     to: 'node-desktop', fc: 'bl', tc: 'tr', color: rc(desktop)  },
-                    { from: 'node-don1',     to: 'node-pixel7',  fc: 'bl', tc: 'tl', color: rc(pixel7)   },
-                    { from: 'node-don2',     to: 'node-pixel10', fc: 'br', tc: 'tr', color: rc(pixel10)  },
-                    { from: 'node-saulynode',to: 'node-pixel7',  fc: 'bl', tc: 'tr', color: rc(pixel7)   },
-                    { from: 'node-saulynode',to: 'node-pixel10', fc: 'br', tc: 'tl', color: rc(pixel10)  },
-                    { from: 'node-suiplay',  to: 'node-pixel7',  fc: 'tl', tc: 'br', color: rc(pixel7)   },
-                    { from: 'node-suiplay',  to: 'node-pixel10', fc: 'tr', tc: 'bl', color: rc(pixel10)  },
-                ]));
             } catch(e) {
                 el.innerHTML = '<p class="text-red-400 text-sm text-center">Failed to load nodes.</p>';
             }
-        }
-
-        function drawConnections(container, connections) {
-            const old = container.querySelector('.diag-svg');
-            if (old) old.remove();
-
-            const NS  = 'http://www.w3.org/2000/svg';
-            const XNS = 'http://www.w3.org/1999/xlink';
-            const svg = document.createElementNS(NS, 'svg');
-            svg.classList.add('diag-svg');
-            svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:2';
-
-            const cr = container.getBoundingClientRect();
-            const pt = (r, c) => {
-                const mx = (r.left + r.right)  / 2 - cr.left;
-                const my = (r.top  + r.bottom) / 2 - cr.top;
-                return { tl:{x:r.left-cr.left,y:r.top-cr.top},    tr:{x:r.right-cr.left,y:r.top-cr.top},
-                         bl:{x:r.left-cr.left,y:r.bottom-cr.top}, br:{x:r.right-cr.left,y:r.bottom-cr.top},
-                         tc:{x:mx,y:r.top-cr.top},   bc:{x:mx,y:r.bottom-cr.top},
-                         lc:{x:r.left-cr.left,y:my}, rc:{x:r.right-cr.left,y:my} }[c];
-            };
-
-            const CYCLE    = 8;    // total seconds for 4 ping+reply cycles
-            const TRAVEL   = 0.55; // seconds to cross the line
-            const GAP      = 0.12; // pause between ping arriving and reply departing
-            const INTERVAL = CYCLE / 4;
-
-            const addPulse = (pathId, beginSec, fill, fwd, lost) => {
-                const dot = document.createElementNS(NS, 'circle');
-                dot.setAttribute('r', '3.5');
-                dot.setAttribute('fill', fill);
-                dot.setAttribute('opacity', '0');
-
-                const motion = document.createElementNS(NS, 'animateMotion');
-                motion.setAttribute('dur',         `${CYCLE}s`);
-                motion.setAttribute('begin',       `${beginSec.toFixed(3)}s`);
-                motion.setAttribute('repeatCount', 'indefinite');
-                motion.setAttribute('calcMode',    'linear');
-                motion.setAttribute('keyTimes',    `0;0.001;${(TRAVEL/CYCLE).toFixed(4)};1`);
-                motion.setAttribute('keyPoints',   fwd ? '0;0;1;1' : '1;1;0;0');
-                const mp = document.createElementNS(NS, 'mpath');
-                mp.setAttributeNS(XNS, 'href', `#${pathId}`);
-                motion.appendChild(mp);
-
-                const fade = document.createElementNS(NS, 'animate');
-                fade.setAttribute('attributeName', 'opacity');
-                if (lost) {
-                    // Turn red and vanish halfway — no reply
-                    fade.setAttribute('values',   '0;1;1;0;0');
-                    fade.setAttribute('keyTimes', `0;0.01;${(TRAVEL*0.45/CYCLE).toFixed(4)};${(TRAVEL*0.52/CYCLE).toFixed(4)};1`);
-                    const toRed = document.createElementNS(NS, 'animate');
-                    toRed.setAttribute('attributeName', 'fill');
-                    toRed.setAttribute('values',   `${fill};#ef4444`);
-                    toRed.setAttribute('keyTimes', `0;${(TRAVEL*0.35/CYCLE).toFixed(4)}`);
-                    toRed.setAttribute('dur', `${CYCLE}s`); toRed.setAttribute('begin', `${beginSec.toFixed(3)}s`);
-                    toRed.setAttribute('repeatCount', 'indefinite');
-                    dot.appendChild(toRed);
-                } else {
-                    fade.setAttribute('values',   '0;1;0.9;0;0');
-                    fade.setAttribute('keyTimes', `0;0.01;${(TRAVEL*0.82/CYCLE).toFixed(4)};${(TRAVEL/CYCLE).toFixed(4)};1`);
-                }
-                fade.setAttribute('dur',         `${CYCLE}s`);
-                fade.setAttribute('begin',       `${beginSec.toFixed(3)}s`);
-                fade.setAttribute('repeatCount', 'indefinite');
-                dot.appendChild(motion);
-                dot.appendChild(fade);
-                svg.appendChild(dot);
-            };
-
-            connections.forEach(({ from, to, fc, tc, color, structural }, i) => {
-                const a = document.getElementById(from);
-                const b = document.getElementById(to);
-                if (!a || !b) return;
-                const p1 = pt(a.getBoundingClientRect(), fc);
-                const p2 = pt(b.getBoundingClientRect(), tc);
-
-                const pathId = `cp-${i}`;
-                const path = document.createElementNS(NS, 'path');
-                path.id = pathId;
-                path.setAttribute('d', `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`);
-                path.setAttribute('fill', 'none');
-                path.setAttribute('stroke', structural ? 'none' : color);
-                path.setAttribute('stroke-width', structural ? '0' : '2');
-                svg.appendChild(path);
-
-                const live = color !== '#374151';
-                for (let j = 0; j < 4; j++) {
-                    const t0 = j * INTERVAL;
-                    if (live) {
-                        addPulse(pathId, t0,              '#3b82f6', true,  false); // outgoing
-                        addPulse(pathId, t0+TRAVEL+GAP,   '#93c5fd', false, false); // reply
-                    } else {
-                        addPulse(pathId, t0, '#3b82f6', true, true); // lost — goes red, dies mid-path
-                    }
-                }
-            });
-
-            container.appendChild(svg);
         }
 
         fetchAll();
