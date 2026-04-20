@@ -109,7 +109,7 @@
                 const don1      = nodes.find(n => n.name === 'don1');
                 const don2      = nodes.find(n => n.name === 'don2');
                 const desktop   = nodes.find(n => n.name === 'DESKTOP-BVKF4TE' && n.os === 'linux');
-                const suiplay   = nodes.find(n => n.name.toLowerCase() === 'suiplay');
+                const suiplay   = nodes.find(n => /suiplay/i.test(n.name));
                 const pixel7    = nodes.find(n => /pixel.?7/i.test(n.name));
                 const pixel10   = nodes.find(n => /pixel.?10/i.test(n.name));
                 const rest      = nodes.filter(n =>
@@ -118,7 +118,7 @@
                     n.name !== 'don1' &&
                     n.name !== 'don2' &&
                     !(n.name === 'DESKTOP-BVKF4TE' && n.os === 'linux') &&
-                    n.name.toLowerCase() !== 'suiplay' &&
+                    !/suiplay/i.test(n.name) &&
                     !/pixel.?7/i.test(n.name) &&
                     !/pixel.?10/i.test(n.name)
                 );
