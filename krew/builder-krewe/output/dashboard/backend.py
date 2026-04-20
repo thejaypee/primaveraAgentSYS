@@ -121,17 +121,21 @@ def _parse_tegrastats(line: str) -> Dict[str, Any]:
 
 class HiveService:
     SSH_HOSTS = {
-        "100.104.65.53": "don1",
-        "100.101.70.84": "don2",
-        "100.85.15.80":  "saulynode",
-        "100.96.141.26": "wsl",
+        "100.104.65.53":  "don1",
+        "100.101.70.84":  "don2",
+        "100.85.15.80":   "saulynode",
+        "100.96.141.26":  "wsl",
+        "100.110.149.48": "sauly-SuiPlay0X1",
     }
     JETSON_IPS = {"100.104.65.53", "100.101.70.84"}
+    AMD_IPS    = {"100.110.149.48"}
     EXCLUDE_HOSTS = {"meinShafft", "stats"}
 
     def _ssh_hardware(self, host_alias: str, ip: str) -> Dict[str, Any]:
         if ip in self.JETSON_IPS:
             return self._ssh_jetson(host_alias)
+        if ip in self.AMD_IPS:
+            return self._ssh_amd(host_alias)
         cmd = (
             "cpu=$(grep 'model name' /proc/cpuinfo | head -1 | cut -d: -f2 | xargs); "
             "cores=$(nproc); "
@@ -188,6 +192,43 @@ class HiveService:
             if teg_stats.get("ram_total_mb"):
                 hw["ram"] = f"{teg_stats['ram_total_mb'] / 1024:.1f}GB"
             hw.update(teg_stats)
+            containers = []
+            for entry in ctrs_raw.split(";;"):
+                entry = entry.strip()
+                if entry:
+                    parts = entry.split(":::")
+                    if len(parts) == 3:
+                        containers.append({"name": parts[0], "image": parts[1], "status": parts[2]})
+            hw["containers"] = containers
+            return hw
+        except Exception:
+            return {}
+
+    def _ssh_amd(self, host_alias: str) -> Dict[str, Any]:
+        cmd = (
+            "cpu=$(grep 'model name' /proc/cpuinfo | head -1 | cut -d: -f2 | xargs); "
+            "cores=$(nproc); "
+            "ram=$(free -m | awk 'NR==2{printf \"%.1fGB\", $2/1024}'); "
+            "disk=$(df -h / | awk 'NR==2{print $2}'); "
+            "gpu_util=$(cat /sys/class/drm/card1/device/gpu_busy_percent 2>/dev/null || echo ''); "
+            "gpu_vram_used=$(cat /sys/class/drm/card1/device/mem_info_vram_used 2>/dev/null || echo ''); "
+            "gpu_vram_total=$(cat /sys/class/drm/card1/device/mem_info_vram_total 2>/dev/null || echo ''); "
+            "ctrs=$(docker ps --format '{{.Names}}:::{{.Image}}:::{{.Status}}' 2>/dev/null | tr '\\n' ';;' || echo ''); "
+            "echo \"$cpu|$cores|$ram|$disk|$gpu_util|$gpu_vram_used|$gpu_vram_total|$ctrs\""
+        )
+        try:
+            out = subprocess.check_output(
+                ["ssh", "-o", "ConnectTimeout=3", "-o", "BatchMode=yes", host_alias, cmd],
+                text=True, stderr=subprocess.DEVNULL
+            ).strip()
+            cpu, cores, ram, disk, gpu_util, gpu_vram_used, gpu_vram_total, ctrs_raw = out.split("|", 7)
+            hw: Dict[str, Any] = {"cpu": cpu, "cores": int(cores), "ram": ram, "disk": disk}
+            if gpu_util:
+                hw["gpu"] = "AMD GPU"
+                hw["gpu_util_pct"] = int(gpu_util)
+            if gpu_vram_used and gpu_vram_total:
+                hw["gpu_vram_used_mb"] = int(gpu_vram_used) // 1024**2
+                hw["gpu_vram_total_mb"] = int(gpu_vram_total) // 1024**2
             containers = []
             for entry in ctrs_raw.split(";;"):
                 entry = entry.strip()

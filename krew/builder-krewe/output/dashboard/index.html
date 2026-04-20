@@ -124,44 +124,46 @@
                 );
 
                 // LAYOUT RULE: every connector (horizontal and vertical) must use GAP.
-                // Adding a new row or node? Use hline/vline — never a custom size.
+                // Adding a new row or node? Use hl(node)/vl(node) — never a custom size.
                 // Change GAP once and the entire topology rebalances automatically.
-                const GAP    = 'min(4vw,48px)';
-                const row    = `display:flex;align-items:center;justify-content:center;width:100%`;
-                const hline  = `height:2px;background:#374151;width:${GAP};flex-shrink:0`;
-                const vwrap  = `display:flex;justify-content:center;width:100%`;
-                const vline  = `width:2px;background:#374151;height:${GAP}`;
-                const ph     = `width:22%;min-width:120px;max-width:200px;aspect-ratio:1/1;flex-shrink:0`;
+                // Rod color = green if the node it leads to is reachable, gray if not.
+                const GAP   = 'min(4vw,48px)';
+                const rc    = n => (n && n.reachable) ? '#4ade80' : '#374151';
+                const hl    = n => `height:2px;background:${rc(n)};width:${GAP};flex-shrink:0`;
+                const vl    = n => `width:2px;background:${rc(n)};height:${GAP}`;
+                const row   = `display:flex;align-items:center;justify-content:center;width:100%`;
+                const vwrap = `display:flex;justify-content:center;width:100%`;
+                const ph    = `width:22%;min-width:120px;max-width:200px;aspect-ratio:1/1;flex-shrink:0`;
 
                 // Row 1: K11 centered
                 let html = `<div style="${vwrap}">${k11 ? nodeCard(k11) : ''}</div>`;
 
-                // Vertical connector K11 → row2
-                html += `<div style="${vwrap}"><div style="${vline}"></div></div>`;
+                // Vertical connector K11 → saulynode
+                html += `<div style="${vwrap}"><div style="${vl(saulynode)}"></div></div>`;
 
                 // Row 2: don1 ── saulynode ── don2
                 html += `<div style="${row}">
                     ${don1 ? nodeCard(don1) : `<div style="${ph}"></div>`}
-                    <div style="${hline}"></div>
+                    <div style="${hl(don1)}"></div>
                     ${saulynode ? nodeCard(saulynode) : `<div style="${ph}"></div>`}
-                    <div style="${hline}"></div>
+                    <div style="${hl(don2)}"></div>
                     ${don2 ? nodeCard(don2) : `<div style="${ph}"></div>`}
                 </div>`;
 
-                // Vertical connector → desktop
+                // Vertical connector saulynode → desktop
                 if (desktop) {
-                    html += `<div style="${vwrap}"><div style="${vline}"></div></div>`;
+                    html += `<div style="${vwrap}"><div style="${vl(desktop)}"></div></div>`;
                     html += `<div style="${vwrap}">${nodeCard(desktop)}</div>`;
                 }
 
-                // Long vertical connector → bottom row (Pixel7 ── suiplay ── Pixel10)
+                // Vertical connector → bottom row (Pixel7 ── suiplay ── Pixel10)
                 if (suiplay || pixel7 || pixel10) {
-                    html += `<div style="${vwrap}"><div style="${vline}"></div></div>`;
+                    html += `<div style="${vwrap}"><div style="${vl(suiplay)}"></div></div>`;
                     html += `<div style="${row}">
                         ${pixel7  ? nodeCard(pixel7)  : `<div style="${ph}"></div>`}
-                        <div style="${hline}"></div>
+                        <div style="${hl(pixel7)}"></div>
                         ${suiplay ? nodeCard(suiplay) : `<div style="${ph}"></div>`}
-                        <div style="${hline}"></div>
+                        <div style="${hl(pixel10)}"></div>
                         ${pixel10 ? nodeCard(pixel10) : `<div style="${ph}"></div>`}
                     </div>`;
                 }
