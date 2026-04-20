@@ -297,12 +297,19 @@ class HiveService:
             if node["self"]:
                 node["latency_ms"] = 0.0
                 node["reachable"] = True
+                node["ssh_ok"] = True
                 node["hardware"] = _local_hardware()
             else:
                 node["latency_ms"] = self._ping(node["ip"])
                 node["reachable"] = node["latency_ms"] is not None
                 alias = self.SSH_HOSTS.get(node["ip"])
-                node["hardware"] = self._ssh_hardware(alias, node["ip"]) if alias else {}
+                if alias:
+                    hw = self._ssh_hardware(alias, node["ip"])
+                    node["hardware"] = hw
+                    node["ssh_ok"] = bool(hw)  # True only if SSH returned data
+                else:
+                    node["hardware"] = {}
+                    node["ssh_ok"] = None  # no SSH configured for this node
             return node
 
         with ThreadPoolExecutor(max_workers=12) as ex:

@@ -128,7 +128,13 @@
                 // Change GAP once and the entire topology rebalances automatically.
                 // Rod color = green if the node it leads to is reachable, gray if not.
                 const GAP   = 'min(4vw,48px)';
-                const rc    = n => (n && n.reachable) ? '#4ade80' : '#374151';
+                // Green = SSH live; red = SSH configured but down; gray = no SSH / unreachable
+                const rc    = n => {
+                    if (!n) return '#374151';
+                    if (n.ssh_ok === true)  return '#4ade80';
+                    if (n.ssh_ok === false) return '#ef4444';
+                    return n.reachable ? '#4ade80' : '#374151';
+                };
                 const hl    = n => `height:2px;background:${rc(n)};width:${GAP};flex-shrink:0`;
                 const vl    = n => `width:2px;background:${rc(n)};height:${GAP}`;
                 const row   = `display:flex;align-items:center;justify-content:center;width:100%`;
