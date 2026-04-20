@@ -14,38 +14,26 @@ The Hive is a **capability-based distributed agent swarm**. A Pixel phone and a 
 
 ```
 krew/
-├── builder-krewe/                  # Code-generation crew (legacy, to be hive-ified)
+├── builder-krewe/                  # Code-generation crew (legacy CrewAI)
 │   ├── src/builderkrewe/
-│   │   ├── config/agents.yaml
-│   │   ├── config/tasks.yaml
-│   │   ├── crew.py
+│   │   ├── config/agents.yaml      # Agent definitions
+│   │   ├── config/tasks.yaml       # Task definitions
+│   │   ├── crew.py                 # @CrewBase assembly
 │   │   ├── main.py
 │   │   └── tools/custom_tool.py
-│   ├── output/dashboard/           # Generated dashboard (running app)
-│   │   ├── backend.py              # FastAPI server (port 8080)
-│   │   ├── index.html
+│   ├── output/dashboard/           # Live hive dashboard (the primary running app)
+│   │   ├── backend.py              # FastAPI server — port 8080
+│   │   ├── index.html              # Dark UI, responsive % layout, auto-refresh 30s
 │   │   └── requirements.txt
-│   ├── knowledge/user_preference.txt
-│   ├── GEMINI.md                   # Comprehensive CrewAI reference — read before writing CrewAI code
+│   ├── GEMINI.md                   # CrewAI reference — read before writing CrewAI code
 │   └── pyproject.toml
-├── research-krewe/                 # Research crew (legacy, to be hive-ified)
+├── research-krewe/                 # Research crew (legacy CrewAI)
 │   ├── src/research_crew/
-│   │   ├── config/agents.yaml
-│   │   ├── config/tasks.yaml
-│   │   ├── crew.py                 # Includes OllamaWebSearch, OllamaWebFetch tools
-│   │   ├── main.py
-│   │   └── tools/custom_tool.py
-│   ├── output/report.md
-│   ├── knowledge/user_preference.txt
-│   ├── GEMINI.md
+│   │   ├── crew.py                 # OllamaWebSearch + OllamaWebFetch custom tools
+│   │   └── ...
 │   └── pyproject.toml
-├── krewe/                          # WIP: Hive router, registry, distributed scheduler
-│   ├── hive_router.py              # FastAPI router (port 50051) — capability-based task dispatch
-│   └── orchestrator.py             # Local thread-pool orchestrator (6 agents, in-memory)
-├── deploy_all.sh                   # Deploy workers to Tailscale nodes
-├── deploy_worker.sh                # rsync + SSH worker start for a single node
 ├── commands.md                     # Full command reference
-└── krew_shared/                    # Shared storage (Syncthing/NFS) — task checkpoints
+└── (krewe/ hive router — aspirational, not yet implemented)
 ```
 
 Each sub-project is a self-contained Python package managed with `uv`.
@@ -71,11 +59,13 @@ run_with_trigger '<JSON_PAYLOAD>'        # run with remote trigger payload
 ### Dashboard
 
 ```bash
-# Always kill existing instance before starting
-pkill -f "python3 backend.py"; sleep 1
+# Always kill existing instance before starting a new one
+lsof -i :8080 -t | xargs -r kill -9; sleep 1
 cd builder-krewe/output/dashboard && python3 backend.py &
 # Open http://localhost:8080
 ```
+
+The dashboard auto-refreshes every 30s. It discovers nodes via `tailscale status --json`, pings all peers in parallel, and SSH-queries hardware for known hosts. Jetson nodes (don1, don2) use `tegrastats` for GPU/RAM/power; K11 uses AMD sysfs at `/sys/class/drm/card1/device/`.
 
 ---
 
@@ -126,22 +116,22 @@ Default topic: `"Artificial Intelligence in Healthcare"` (in `main.py:run()`).
 
 ---
 
-## Hive Infrastructure (WIP)
+## Hive Infrastructure (Design — not yet implemented)
 
-### hive_router.py — FastAPI on port 50051
-Routes tasks to the best available node by scoring candidates on memory, cost, and latency.
+Planned capability-based task router: nodes publish vectors (memory, GPU, models), router scores and dispatches to lowest-cost fit. No static agent-to-node mapping.
 
-Key endpoints: `/submit` (TaskRequest), `/nodes`, `/health`, `/parse`, `/verify`
+### Planned dependencies
+- **Redis**: node registry (`krewe:nodes` hash), pub/sub for results and heartbeats
+- **Tailscale**: mesh between K11, saulynode, don1, don2, DESKTOP-BVKF4TE; SSH key `~/.ssh/id_ed25519`, user `admin`
+- **`/krewe_shared/`**: Syncthing/NFS for task checkpoints
 
-Node registry stored in Redis hash `krewe:nodes`. Workers heartbeat every 10s.
-
-### orchestrator.py — Local orchestrator
-Thread-pool executor (max 6 workers), in-memory agent registry with per-agent LLM assignments. Handles agent dependency gates and inter-agent message queues.
-
-### Infrastructure dependencies
-- **Redis**: node registry, pub/sub for task results and heartbeats
-- **Tailscale**: mesh network between nodes, latency target <10ms, SSH deployment
-- **`/krewe_shared/`**: Syncthing or NFS mount for task checkpoints (written every 30s)
+### Known SSH aliases (in `backend.py:HiveService.SSH_HOSTS`)
+| IP | Alias | Type |
+|---|---|---|
+| 100.104.65.53 | don1 | Jetson Orin Nano Super |
+| 100.101.70.84 | don2 | Jetson Orin Nano Super |
+| 100.85.15.80 | saulynode | Linux |
+| 100.96.141.26 | wsl | Linux (WSL) |
 
 ---
 

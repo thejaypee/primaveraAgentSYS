@@ -46,9 +46,9 @@
             document.getElementById('last-updated').innerText = new Date().toLocaleTimeString();
         }
 
-        function nodeCard(n, extraClass = '') {
-            const dotColor   = n.reachable ? '#4ade80' : '#4b5563';
-            const labelColor = n.reachable ? '#4ade80' : '#4b5563';
+        function nodeCard(n) {
+            const dotColor    = n.reachable ? '#4ade80' : '#4b5563';
+            const labelColor  = n.reachable ? '#4ade80' : '#4b5563';
             const borderColor = n.self ? '#4f46e5' : '#374151';
             const osIcon = { linux: '🐧', windows: '🪟', android: '📱' }[n.os] || '💻';
             const hw = n.hardware || {};
@@ -61,8 +61,8 @@
                 hwHtml += `<div style="font-size:10px;color:#6b7280">${hw.cores} cores · ${ram}${hw.disk ? ' · '+hw.disk : ''}</div>`;
             }
             if (hw.gpu) {
-                const util  = hw.gpu_util_pct  !== undefined ? ` ${hw.gpu_util_pct}%`   : '';
-                const temp  = hw.gpu_temp_c    !== undefined ? ` ${hw.gpu_temp_c}°C`    : '';
+                const util  = hw.gpu_util_pct  !== undefined ? ` ${hw.gpu_util_pct}%`  : '';
+                const temp  = hw.gpu_temp_c    !== undefined ? ` ${hw.gpu_temp_c}°C`   : '';
                 const vram  = hw.gpu_vram_used_mb !== undefined ? ` ${hw.gpu_vram_used_mb}/${hw.gpu_vram_total_mb}MB` : '';
                 const power = hw.power_mw      !== undefined ? ` · ${(hw.power_mw/1000).toFixed(1)}W` : '';
                 hwHtml += `<div style="font-size:10px;color:#818cf8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">GPU${util}${temp}${vram}${power}</div>`;
@@ -70,7 +70,7 @@
 
             const latency = n.self ? 'self' : (n.reachable ? n.latency_ms + ' ms' : 'unreachable');
 
-            const containers = (hw.containers || []);
+            const containers = hw.containers || [];
             let ctrsHtml = '';
             if (containers.length) {
                 ctrsHtml = containers.map(c =>
@@ -78,17 +78,20 @@
                 ).join('');
             }
 
-            return `
-                <div class="${extraClass}" style="border:1px solid ${borderColor};background:#1f2937;border-radius:10px;padding:14px;width:200px;height:200px;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-start;position:relative;z-index:1">
-                    <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
-                        <span style="background:${dotColor};width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>
-                        <span style="font-weight:600;font-size:13px;color:#f3f4f6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span>
-                    </div>
-                    <div style="font-size:10px;color:#6b7280">${osIcon} ${n.ip}</div>
-                    ${hwHtml}
-                    ${ctrsHtml}
-                    <div style="font-size:10px;color:${labelColor};margin-top:auto;padding-top:4px">${latency}</div>
-                </div>`;
+            // Card: % width, aspect-ratio keeps it square
+            return `<div style="border:1px solid ${borderColor};background:#1f2937;border-radius:10px;padding:1.2%;
+                        width:22%;min-width:120px;max-width:200px;aspect-ratio:1/1;
+                        box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;
+                        justify-content:flex-start;flex-shrink:0;position:relative;z-index:1">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+                    <span style="background:${dotColor};width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>
+                    <span style="font-weight:600;font-size:13px;color:#f3f4f6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span>
+                </div>
+                <div style="font-size:10px;color:#6b7280">${osIcon} ${n.ip}</div>
+                ${hwHtml}
+                ${ctrsHtml}
+                <div style="font-size:10px;color:${labelColor};margin-top:auto;padding-top:4px">${latency}</div>
+            </div>`;
         }
 
         async function fetchHiveNodes() {
@@ -101,12 +104,12 @@
                     return;
                 }
 
-                const k11      = nodes.find(n => n.self);
+                const k11       = nodes.find(n => n.self);
                 const saulynode = nodes.find(n => n.name === 'saulynode');
-                const don1     = nodes.find(n => n.name === 'don1');
-                const don2     = nodes.find(n => n.name === 'don2');
-                const desktop  = nodes.find(n => n.name === 'DESKTOP-BVKF4TE' && n.os === 'linux');
-                const rest     = nodes.filter(n =>
+                const don1      = nodes.find(n => n.name === 'don1');
+                const don2      = nodes.find(n => n.name === 'don2');
+                const desktop   = nodes.find(n => n.name === 'DESKTOP-BVKF4TE' && n.os === 'linux');
+                const rest      = nodes.filter(n =>
                     !n.self &&
                     n.name !== 'saulynode' &&
                     n.name !== 'don1' &&
@@ -114,57 +117,39 @@
                     !(n.name === 'DESKTOP-BVKF4TE' && n.os === 'linux')
                 );
 
-                const C = 200;   // card size px
-                const G = 40;    // gap px — same vertically and horizontally
-                const W = C * 3 + G * 2;
-
-                const wrap  = `display:flex;justify-content:center`;
-                const row   = `display:flex;align-items:center;justify-content:center;gap:${G}px`;
-                const vgap  = `width:2px;height:${G}px;background:#374151;margin:0 auto`;
-                const hline = `height:2px;width:${G}px;background:#374151;flex-shrink:0`;
+                // Both connectors use the same CSS length so h-gap === v-gap always
+                const GAP   = 'min(4vw,48px)';
+                const row   = `display:flex;align-items:center;justify-content:center;width:100%`;
+                const hline = `height:2px;background:#374151;width:${GAP};flex-shrink:0`;
+                const vwrap = `display:flex;justify-content:center;width:100%`;
+                const vline = `width:2px;background:#374151;height:${GAP}`;
+                // placeholder keeps row2 symmetric when a node is missing
+                const ph    = `width:22%;min-width:120px;max-width:200px;aspect-ratio:1/1;flex-shrink:0`;
 
                 // Row 1: K11 centered
-                let html = `<div style="${wrap}">
-                    <div style="width:${W}px;display:flex;justify-content:center">
-                        ${k11 ? nodeCard(k11) : ''}
-                    </div>
-                </div>`;
+                let html = `<div style="${vwrap}">${k11 ? nodeCard(k11) : ''}</div>`;
 
-                // Vertical connector K11 → row2, aligned to center column
-                html += `<div style="${wrap}">
-                    <div style="width:${W}px;display:flex;justify-content:center">
-                        <div style="${vgap}"></div>
-                    </div>
-                </div>`;
+                // Vertical connector K11 → row2 (centered = always under K11 / saulynode)
+                html += `<div style="${vwrap}"><div style="${vline}"></div></div>`;
 
-                // Row 2: don1 ——— saulynode ——— don2
-                html += `<div style="${wrap}">
-                    <div style="${row}">
-                        ${don1 ? nodeCard(don1) : `<div style="width:${C}px"></div>`}
-                        <div style="${hline}"></div>
-                        ${saulynode ? nodeCard(saulynode) : `<div style="width:${C}px"></div>`}
-                        <div style="${hline}"></div>
-                        ${don2 ? nodeCard(don2) : `<div style="width:${C}px"></div>`}
-                    </div>
+                // Row 2: don1 ── saulynode ── don2
+                html += `<div style="${row}">
+                    ${don1 ? nodeCard(don1) : `<div style="${ph}"></div>`}
+                    <div style="${hline}"></div>
+                    ${saulynode ? nodeCard(saulynode) : `<div style="${ph}"></div>`}
+                    <div style="${hline}"></div>
+                    ${don2 ? nodeCard(don2) : `<div style="${ph}"></div>`}
                 </div>`;
 
                 // Vertical connector saulynode → desktop
                 if (desktop) {
-                    html += `<div style="${wrap}">
-                        <div style="width:${W}px;display:flex;justify-content:center">
-                            <div style="${vgap}"></div>
-                        </div>
-                    </div>`;
-                    html += `<div style="${wrap}">
-                        <div style="width:${W}px;display:flex;justify-content:center">
-                            ${nodeCard(desktop)}
-                        </div>
-                    </div>`;
+                    html += `<div style="${vwrap}"><div style="${vline}"></div></div>`;
+                    html += `<div style="${vwrap}">${nodeCard(desktop)}</div>`;
                 }
 
-                // Rest: same gap grid below
+                // Overflow nodes
                 if (rest.length) {
-                    html += `<div style="display:flex;flex-wrap:wrap;gap:${G}px;margin-top:${G*2}px;padding-top:${G}px;border-top:1px solid #374151;justify-content:center">
+                    html += `<div style="display:flex;flex-wrap:wrap;gap:2%;margin-top:4%;padding-top:3%;border-top:1px solid #374151;justify-content:center">
                         ${rest.map(n => nodeCard(n)).join('')}
                     </div>`;
                 }
@@ -174,8 +159,6 @@
                 el.innerHTML = '<p class="text-red-400 text-sm text-center">Failed to load nodes.</p>';
             }
         }
-
-
 
         fetchAll();
         setInterval(fetchAll, 30000);
