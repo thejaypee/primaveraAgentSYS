@@ -54,6 +54,35 @@ class NetworkService:
 
 
 class HiveService:
+    SSH_HOSTS = {
+        "100.104.65.53": "don1",
+        "100.101.70.84": "don2",
+        "100.85.15.80":  "saulynode",
+        "100.96.141.26": "wsl",
+    }
+
+    def _ssh_hardware(self, host_alias: str) -> Dict[str, Any]:
+        cmd = (
+            "cpu=$(grep 'model name' /proc/cpuinfo | head -1 | cut -d: -f2 | xargs); "
+            "cores=$(nproc); "
+            "ram=$(free -m | awk 'NR==2{printf \"%.1fGB\", $2/1024}'); "
+            "disk=$(df -h / | awk 'NR==2{print $2}'); "
+            "gpu=$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1 || echo ''); "
+            "echo \"$cpu|$cores|$ram|$disk|$gpu\""
+        )
+        try:
+            out = subprocess.check_output(
+                ["ssh", "-o", "ConnectTimeout=3", "-o", "BatchMode=yes", host_alias, cmd],
+                text=True, stderr=subprocess.DEVNULL
+            ).strip()
+            cpu, cores, ram, disk, gpu = out.split("|")
+            result = {"cpu": cpu, "cores": int(cores), "ram": ram, "disk": disk}
+            if gpu:
+                result["gpu"] = gpu
+            return result
+        except Exception:
+            return {}
+
     def _ping(self, ip: str):
         try:
             out = subprocess.check_output(
@@ -83,6 +112,8 @@ class HiveService:
                 "self": True,
             })
         for peer in data.get("Peer", {}).values():
+            if peer.get("OS") == "iOS":
+                continue
             raw.append({
                 "name": peer.get("HostName", ""),
                 "ip": peer.get("TailscaleIPs", [""])[0],
@@ -97,6 +128,8 @@ class HiveService:
             else:
                 node["latency_ms"] = self._ping(node["ip"])
             node["reachable"] = node["latency_ms"] is not None
+            alias = self.SSH_HOSTS.get(node["ip"])
+            node["hardware"] = self._ssh_hardware(alias) if alias else {}
             return node
 
         with ThreadPoolExecutor(max_workers=12) as ex:

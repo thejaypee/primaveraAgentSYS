@@ -66,14 +66,19 @@
                     const labelColor = n.reachable ? '#4ade80' : '#4b5563';
                     const borderColor = n.self ? '#4f46e5' : '#374151';
                     const osIcon = { linux: '🐧', windows: '🪟', android: '📱', iOS: '📱' }[n.os] || '💻';
+                    const hw = n.hardware || {};
+                    const hwLines = [];
+                    if (hw.cpu) hwLines.push(`<div class="text-xs text-gray-300 mt-1 truncate" title="${hw.cpu}">${hw.cpu}</div>`);
+                    if (hw.cores) hwLines.push(`<div class="text-xs text-gray-500">${hw.cores} cores · ${hw.ram} · ${hw.disk}</div>`);
+                    if (hw.gpu)  hwLines.push(`<div class="text-xs text-indigo-400 truncate" title="${hw.gpu}">GPU: ${hw.gpu}</div>`);
                     return `
                         <div style="border-color:${borderColor}" class="bg-gray-800 border rounded-lg p-3">
                             <div class="flex items-center gap-2 mb-1">
                                 <span style="background:${dotColor};width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block"></span>
                                 <span class="font-medium text-gray-100 text-sm truncate">${n.name}${n.self ? ' ✦' : ''}</span>
                             </div>
-                            <div class="text-xs text-gray-400">${osIcon} ${n.os}</div>
-                            <div class="text-xs text-gray-500 font-mono mt-0.5">${n.ip}</div>
+                            <div class="text-xs text-gray-400">${osIcon} ${n.os} · ${n.ip}</div>
+                            ${hwLines.join('')}
                             <div style="color:${labelColor}" class="text-xs mt-1">${n.reachable ? (n.self ? 'self' : n.latency_ms + ' ms') : 'unreachable'}</div>
                         </div>
                     `;
