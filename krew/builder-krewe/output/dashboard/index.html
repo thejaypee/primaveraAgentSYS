@@ -44,17 +44,12 @@
             </div>
         </section>
 
-        <!-- GPU -->
-        <section class="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <h2 class="text-lg font-semibold text-gray-200 mb-4">GPU (K11)</h2>
-            <div id="gpu-info" class="text-sm text-gray-400">Loading...</div>
-        </section>
 
     </main>
 
     <script>
         async function fetchAll() {
-            await Promise.all([fetchHiveNodes(), fetchContainers(), fetchGpu()]);
+            await Promise.all([fetchHiveNodes(), fetchContainers()]);
             document.getElementById('last-updated').innerText = new Date().toLocaleTimeString();
         }
 
@@ -202,25 +197,6 @@
             }
         }
 
-        async function fetchGpu() {
-            const el = document.getElementById('gpu-info');
-            try {
-                const res = await fetch('/system/hardware/gpu');
-                const { metrics } = await res.json();
-                if (metrics.error) {
-                    el.innerHTML = `<span class="text-gray-500">${metrics.error}</span>`;
-                } else {
-                    el.innerHTML = `
-                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
-                            <div><p style="font-size:11px;color:#6b7280;margin-bottom:4px">Model</p><p class="text-gray-200">${metrics.gpu_model}</p></div>
-                            <div><p style="font-size:11px;color:#6b7280;margin-bottom:4px">Utilization</p><p class="text-gray-200">${metrics.gpu_utilization_percent}%</p></div>
-                            <div><p style="font-size:11px;color:#6b7280;margin-bottom:4px">VRAM</p><p class="text-gray-200">${metrics.memory_used_mb} / ${metrics.memory_total_mb} MB</p></div>
-                        </div>`;
-                }
-            } catch {
-                el.innerHTML = '<span class="text-red-400">Failed to load GPU info.</span>';
-            }
-        }
 
         fetchAll();
         setInterval(fetchAll, 30000);
