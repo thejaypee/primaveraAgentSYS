@@ -47,25 +47,25 @@
         }
 
         function nodeCard(n) {
-            const dotColor    = n.reachable ? '#4ade80' : '#4b5563';
-            const labelColor  = n.reachable ? '#4ade80' : '#4b5563';
+            // Status dot color: green = reachable, red = unreachable, blue = pinging
+            const dotColor    = n.reachable ? '#4ade80' : '#ef4444';
             const borderColor = n.self ? '#4f46e5' : '#374151';
             const osIcon = { linux: '🐧', windows: '🪟', android: '📱' }[n.os] || '💻';
             const hw = n.hardware || {};
             const label = n.self ? 'K11' : n.name;
 
             let hwHtml = '';
-            if (hw.cpu) hwHtml += `<div style="font-size:10px;color:#9ca3af;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${hw.cpu}">${hw.cpu}</div>`;
+            if (hw.cpu) hwHtml += `<div style="font-size:12px;color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${hw.cpu}">${hw.cpu}</div>`;
             if (hw.cores) {
                 const ram = hw.ram || (hw.ram_total_mb ? (hw.ram_total_mb/1024).toFixed(1)+'GB' : '');
-                hwHtml += `<div style="font-size:10px;color:#6b7280">${hw.cores} cores · ${ram}${hw.disk ? ' · '+hw.disk : ''}</div>`;
+                hwHtml += `<div style="font-size:12px;color:#6b7280">${hw.cores} cores · ${ram}${hw.disk ? ' · '+hw.disk : ''}</div>`;
             }
             if (hw.gpu) {
                 const util  = hw.gpu_util_pct  !== undefined ? ` ${hw.gpu_util_pct}%`  : '';
                 const temp  = hw.gpu_temp_c    !== undefined ? ` ${hw.gpu_temp_c}°C`   : '';
                 const vram  = hw.gpu_vram_used_mb !== undefined ? ` ${hw.gpu_vram_used_mb}/${hw.gpu_vram_total_mb}MB` : '';
                 const power = hw.power_mw      !== undefined ? ` · ${(hw.power_mw/1000).toFixed(1)}W` : '';
-                hwHtml += `<div style="font-size:10px;color:#818cf8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">GPU${util}${temp}${vram}${power}</div>`;
+                hwHtml += `<div style="font-size:12px;color:#818cf8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">GPU${util}${temp}${vram}${power}</div>`;
             }
 
             const latency = n.self ? 'self' : (n.reachable ? n.latency_ms + ' ms' : 'unreachable');
@@ -74,7 +74,7 @@
             let ctrsHtml = '';
             if (containers.length) {
                 ctrsHtml = containers.map(c =>
-                    `<div style="font-size:9px;color:#6ee7b7;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">▶ ${c.name}</div>`
+                    `<div style="font-size:11px;color:#6ee7b7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">▶ ${c.name}</div>`
                 ).join('');
             }
 
@@ -87,22 +87,22 @@
                 : /pixel.?7/i.test(n.name) ? 'node-pixel7'
                 : /pixel.?10/i.test(n.name) ? 'node-pixel10' : '';
 
-            // Card: center dot in exact center, hardware data, no ping animation
+            // Card: 1 status dot in exact center of box
             return `<div id="${nodeId}" style="border:1px solid ${borderColor};background:#1f2937;border-radius:10px;padding:10%;
                         width:22%;min-width:120px;max-width:200px;aspect-ratio:1/1;
                         box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;
-                        justify-content:center;flex-shrink:0;position:relative;z-index:1">
+                        justify-content:center;flex-shrink:0;position:relative">
                 <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
-                    <span style="background:${dotColor};width:6px;height:6px;border-radius:50%;display:inline-block;"></span>
+                    <span style="background:${dotColor};width:12px;height:12px;border-radius:50%;display:inline-block;"></span>
                 </div>
-                <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;position:relative;z-index:2;">
-                    <span style="background:${dotColor};width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>
-                    <span style="font-weight:600;font-size:13px;color:#f3f4f6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span>
+                <div style="display:flex;align-items:center;gap:6px;position:relative;z-index:2;">
+                    <span style="background:${dotColor};width:10px;height:10px;border-radius:50%;flex-shrink:0"></span>
+                    <span style="font-weight:600;font-size:16px;color:#f3f4f6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span>
                 </div>
-                <div style="font-size:10px;color:#6b7280;position:relative;z-index:2">${osIcon} ${n.ip}</div>
+                <div style="font-size:12px;color:#6b7280;position:relative;z-index:2">${osIcon} ${n.ip}</div>
                 ${hwHtml}
                 ${ctrsHtml}
-                <div style="font-size:10px;color:${labelColor};margin-top:8px;padding-top:4px;position:relative;z-index:2">${latency}</div>
+                <div style="font-size:12px;color:${dotColor};margin-top:8px;position:relative;z-index:2">${latency}</div>
             </div>`;
         }
 
