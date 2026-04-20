@@ -5,11 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Krewe Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .hive-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: auto auto auto auto;
+            gap: 12px;
+            align-items: start;
+        }
+        .pos-k11       { grid-column: 2; grid-row: 1; }
+        .pos-don1      { grid-column: 1; grid-row: 2; }
+        .pos-saulynode { grid-column: 2; grid-row: 2; }
+        .pos-don2      { grid-column: 3; grid-row: 2; }
+        .pos-desktop   { grid-column: 2; grid-row: 3; }
+        .pos-rest      { grid-column: 1 / span 3; grid-row: 4; display: flex; gap: 12px; flex-wrap: wrap; }
+        .connector-v {
+            width: 2px; height: 12px; background: #374151;
+            margin: 0 auto -6px;
+        }
+        .connector-h-wrap {
+            display: flex; align-items: center; justify-content: space-between;
+            grid-column: 1 / span 3; grid-row: 2;
+            pointer-events: none; position: relative;
+        }
+    </style>
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans antialiased">
 
     <header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
-        <div class="max-w-6xl mx-auto py-4 px-6 flex justify-between items-center">
+        <div class="max-w-5xl mx-auto py-4 px-6 flex justify-between items-center">
             <h1 class="text-xl font-bold text-white tracking-tight">Krewe Dashboard</h1>
             <div class="flex items-center gap-4">
                 <span id="last-updated" class="text-sm text-gray-400"></span>
@@ -20,13 +44,13 @@
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto p-6 space-y-8">
+    <main class="max-w-5xl mx-auto p-6 space-y-8">
 
-        <!-- Hive Nodes -->
+        <!-- Hive Topology -->
         <section class="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <h2 class="text-lg font-semibold text-gray-200 mb-4">Hive Nodes</h2>
-            <div id="hive-list" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                <p class="text-gray-500 text-sm col-span-full">Loading...</p>
+            <h2 class="text-lg font-semibold text-gray-200 mb-6">Hive Nodes</h2>
+            <div id="hive-topology" class="hive-grid">
+                <p class="text-gray-500 text-sm" style="grid-column:2">Loading...</p>
             </div>
         </section>
 
@@ -40,7 +64,7 @@
 
         <!-- GPU -->
         <section class="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <h2 class="text-lg font-semibold text-gray-200 mb-4">GPU</h2>
+            <h2 class="text-lg font-semibold text-gray-200 mb-4">GPU (K11)</h2>
             <div id="gpu-info" class="text-sm text-gray-400">Loading...</div>
         </section>
 
@@ -52,48 +76,96 @@
             document.getElementById('last-updated').innerText = new Date().toLocaleTimeString();
         }
 
+        function nodeCard(n, extraClass = '') {
+            const dotColor   = n.reachable ? '#4ade80' : '#4b5563';
+            const labelColor = n.reachable ? '#4ade80' : '#4b5563';
+            const borderColor = n.self ? '#4f46e5' : '#374151';
+            const osIcon = { linux: '🐧', windows: '🪟', android: '📱' }[n.os] || '💻';
+            const hw = n.hardware || {};
+            const label = n.self ? 'K11' : n.name;
+
+            let hwHtml = '';
+            if (hw.cpu) hwHtml += `<div style="font-size:10px;color:#9ca3af;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${hw.cpu}">${hw.cpu}</div>`;
+            if (hw.cores) {
+                const ram = hw.ram || (hw.ram_total_mb ? (hw.ram_total_mb/1024).toFixed(1)+'GB' : '');
+                hwHtml += `<div style="font-size:10px;color:#6b7280">${hw.cores} cores · ${ram}${hw.disk ? ' · '+hw.disk : ''}</div>`;
+            }
+            if (hw.gpu) {
+                const util  = hw.gpu_util_pct  !== undefined ? ` ${hw.gpu_util_pct}%`   : '';
+                const temp  = hw.gpu_temp_c    !== undefined ? ` ${hw.gpu_temp_c}°C`    : '';
+                const vram  = hw.gpu_vram_used_mb !== undefined ? ` ${hw.gpu_vram_used_mb}/${hw.gpu_vram_total_mb}MB` : '';
+                const power = hw.power_mw      !== undefined ? ` · ${(hw.power_mw/1000).toFixed(1)}W` : '';
+                hwHtml += `<div style="font-size:10px;color:#818cf8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">GPU${util}${temp}${vram}${power}</div>`;
+            }
+
+            const latency = n.self ? 'self' : (n.reachable ? n.latency_ms + ' ms' : 'unreachable');
+
+            return `
+                <div class="${extraClass}" style="border:1px solid ${borderColor};background:#1f2937;border-radius:10px;padding:12px;min-width:0">
+                    <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+                        <span style="background:${dotColor};width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>
+                        <span style="font-weight:600;font-size:13px;color:#f3f4f6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span>
+                    </div>
+                    <div style="font-size:10px;color:#6b7280">${osIcon} ${n.ip}</div>
+                    ${hwHtml}
+                    <div style="font-size:10px;color:${labelColor};margin-top:4px">${latency}</div>
+                </div>`;
+        }
+
         async function fetchHiveNodes() {
-            const el = document.getElementById('hive-list');
+            const el = document.getElementById('hive-topology');
             try {
                 const res = await fetch('/hive/nodes');
                 const { nodes } = await res.json();
                 if (!nodes.length) {
-                    el.innerHTML = '<p class="text-gray-500 text-sm col-span-full">No nodes found.</p>';
+                    el.innerHTML = '<p style="grid-column:2" class="text-gray-500 text-sm">No nodes found.</p>';
                     return;
                 }
-                el.innerHTML = nodes.map(n => {
-                    const dotColor = n.reachable ? '#4ade80' : '#4b5563';
-                    const labelColor = n.reachable ? '#4ade80' : '#4b5563';
-                    const borderColor = n.self ? '#4f46e5' : '#374151';
-                    const osIcon = { linux: '🐧', windows: '🪟', android: '📱', iOS: '📱' }[n.os] || '💻';
-                    const hw = n.hardware || {};
-                    const hwLines = [];
-                    if (hw.cpu) hwLines.push(`<div class="text-xs text-gray-300 mt-1 truncate" title="${hw.cpu}">${hw.cpu}</div>`);
-                    if (hw.cores) {
-                        const ramStr = hw.ram || (hw.ram_total_mb ? (hw.ram_total_mb/1024).toFixed(1)+'GB' : '');
-                        hwLines.push(`<div class="text-xs text-gray-500">${hw.cores} cores · ${ramStr} · ${hw.disk}</div>`);
-                    }
-                    if (hw.gpu) {
-                        const gpuUtil = hw.gpu_util_pct !== undefined ? ` ${hw.gpu_util_pct}%` : '';
-                        const gpuTemp = hw.gpu_temp_c !== undefined ? ` ${hw.gpu_temp_c}°C` : '';
-                        const gpuVram = hw.gpu_vram_used_mb !== undefined ? ` ${hw.gpu_vram_used_mb}/${hw.gpu_vram_total_mb}MB` : '';
-                        const power = hw.power_mw !== undefined ? ` · ${(hw.power_mw/1000).toFixed(1)}W` : '';
-                        hwLines.push(`<div class="text-xs text-indigo-400 truncate" title="${hw.gpu}">GPU${gpuUtil}${gpuTemp}${gpuVram}${power}</div>`);
-                    }
-                    return `
-                        <div style="border-color:${borderColor}" class="bg-gray-800 border rounded-lg p-3">
-                            <div class="flex items-center gap-2 mb-1">
-                                <span style="background:${dotColor};width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block"></span>
-                                <span class="font-medium text-gray-100 text-sm truncate">${n.name}${n.self ? ' ✦' : ''}</span>
-                            </div>
-                            <div class="text-xs text-gray-400">${osIcon} ${n.os} · ${n.ip}</div>
-                            ${hwLines.join('')}
-                            <div style="color:${labelColor}" class="text-xs mt-1">${n.reachable ? (n.self ? 'self' : n.latency_ms + ' ms') : 'unreachable'}</div>
-                        </div>
-                    `;
-                }).join('');
-            } catch {
-                el.innerHTML = '<p class="text-red-400 text-sm col-span-full">Failed to load nodes.</p>';
+
+                const byName = {};
+                nodes.forEach(n => { byName[n.self ? 'sauly' : n.name] = n; });
+
+                const k11      = byName['sauly'];
+                const saulynode = byName['saulynode'];
+                const don1     = byName['don1'];
+                const don2     = byName['don2'];
+                // DESKTOP: pick by linux ip
+                const desktop  = nodes.find(n => n.name === 'DESKTOP-BVKF4TE' && n.os === 'linux');
+                const rest     = nodes.filter(n =>
+                    !n.self &&
+                    n.name !== 'saulynode' &&
+                    n.name !== 'don1' &&
+                    n.name !== 'don2' &&
+                    !(n.name === 'DESKTOP-BVKF4TE' && n.os === 'linux')
+                );
+
+                let html = '';
+
+                // Row 1 — K11 center
+                if (k11) html += `<div class="pos-k11">${nodeCard(k11)}</div>`;
+
+                // Vertical connector K11 → saulynode
+                html += `<div style="grid-column:2;grid-row:1;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:none"><div style="width:2px;height:14px;background:#374151;margin:0 auto -2px"></div></div>`;
+
+                // Row 2 — don1 | saulynode | don2
+                if (don1)      html += `<div class="pos-don1">${nodeCard(don1)}</div>`;
+                if (saulynode) html += `<div class="pos-saulynode">${nodeCard(saulynode)}</div>`;
+                if (don2)      html += `<div class="pos-don2">${nodeCard(don2)}</div>`;
+
+                // Vertical connector saulynode → desktop
+                if (desktop) {
+                    html += `<div style="grid-column:2;grid-row:2;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:none"><div style="width:2px;height:14px;background:#374151;margin:0 auto -2px"></div></div>`;
+                    html += `<div class="pos-desktop">${nodeCard(desktop)}</div>`;
+                }
+
+                // Row 4 — remaining nodes
+                if (rest.length) {
+                    html += `<div class="pos-rest">${rest.map(n => nodeCard(n, '')).join('')}</div>`;
+                }
+
+                el.innerHTML = html;
+            } catch(e) {
+                el.innerHTML = '<p style="grid-column:2" class="text-red-400 text-sm">Failed to load nodes.</p>';
             }
         }
 
@@ -130,12 +202,11 @@
                     el.innerHTML = `<span class="text-gray-500">${metrics.error}</span>`;
                 } else {
                     el.innerHTML = `
-                        <div class="grid grid-cols-3 gap-4">
-                            <div><p class="text-gray-500 text-xs mb-1">Model</p><p class="text-gray-200">${metrics.gpu_model}</p></div>
-                            <div><p class="text-gray-500 text-xs mb-1">Utilization</p><p class="text-gray-200">${metrics.gpu_utilization_percent}%</p></div>
-                            <div><p class="text-gray-500 text-xs mb-1">Memory</p><p class="text-gray-200">${metrics.memory_used_mb} / ${metrics.memory_total_mb} MB</p></div>
-                        </div>
-                    `;
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+                            <div><p style="font-size:11px;color:#6b7280;margin-bottom:4px">Model</p><p class="text-gray-200">${metrics.gpu_model}</p></div>
+                            <div><p style="font-size:11px;color:#6b7280;margin-bottom:4px">Utilization</p><p class="text-gray-200">${metrics.gpu_utilization_percent}%</p></div>
+                            <div><p style="font-size:11px;color:#6b7280;margin-bottom:4px">VRAM</p><p class="text-gray-200">${metrics.memory_used_mb} / ${metrics.memory_total_mb} MB</p></div>
+                        </div>`;
                 }
             } catch {
                 el.innerHTML = '<span class="text-red-400">Failed to load GPU info.</span>';
