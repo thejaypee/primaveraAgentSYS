@@ -165,22 +165,22 @@
                     ${don2 ? nodeCard(don2) : `<div style="${ph}"></div>`}
                 </div>`;
 
-                // Vertical connector saulynode → desktop
-                if (desktop) {
-                    html += `<div style="${vwrap}"><div style="${vl(desktop)}"></div></div>`;
-                    html += `<div style="${vwrap}">${nodeCard(desktop)}</div>`;
-                }
+                // Vertical connector saulynode → desktop row
+                html += `<div style="${vwrap}"><div style="${vl(desktop)}"></div></div>`;
 
-                // Vertical connector → bottom row (Pixel7 ── suiplay ── Pixel10)
-                if (suiplay || pixel7 || pixel10) {
+                // Row 3: Pixel7 ── Desktop ── Pixel10
+                html += `<div style="${row}">
+                    ${pixel7  ? nodeCard(pixel7)  : `<div style="${ph}"></div>`}
+                    <div style="${hl(pixel7)}"></div>
+                    ${desktop ? nodeCard(desktop) : `<div style="${ph}"></div>`}
+                    <div style="${hl(pixel10)}"></div>
+                    ${pixel10 ? nodeCard(pixel10) : `<div style="${ph}"></div>`}
+                </div>`;
+
+                // Vertical connector Desktop → suiplay (caboose)
+                if (suiplay) {
                     html += `<div style="${vwrap}"><div style="${vl(suiplay)}"></div></div>`;
-                    html += `<div style="${row}">
-                        ${pixel7  ? nodeCard(pixel7)  : `<div style="${ph}"></div>`}
-                        <div style="${hl(pixel7)}"></div>
-                        ${suiplay ? nodeCard(suiplay) : `<div style="${ph}"></div>`}
-                        <div style="${hl(pixel10)}"></div>
-                        ${pixel10 ? nodeCard(pixel10) : `<div style="${ph}"></div>`}
-                    </div>`;
+                    html += `<div style="${vwrap}">${nodeCard(suiplay)}</div>`;
                 }
 
                 // Any remaining unlisted nodes
@@ -195,8 +195,8 @@
 
                 // Draw diagonal SSH connections after layout settles
                 requestAnimationFrame(() => drawDiagonals(el, [
-                    { from: 'node-k11',    to: 'node-don2',    fc: 'br', tc: 'tl', color: rc(don2)    },
-                    { from: 'node-don2',   to: 'node-desktop', fc: 'bl', tc: 'tr', color: rc(desktop)  },
+                    { from: 'node-k11',  to: 'node-don2',    fc: 'br', tc: 'tl', color: rc(don2)   },
+                    { from: 'node-don2', to: 'node-desktop',  fc: 'bl', tc: 'tr', color: rc(desktop) },
                 ]));
             } catch(e) {
                 el.innerHTML = '<p class="text-red-400 text-sm text-center">Failed to load nodes.</p>';
