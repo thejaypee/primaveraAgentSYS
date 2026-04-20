@@ -87,18 +87,18 @@
                 : /pixel.?7/i.test(n.name) ? 'node-pixel7'
                 : /pixel.?10/i.test(n.name) ? 'node-pixel10' : '';
 
-            // Card: PC name centered at top, data below, center dot
+            // Card: PC name centered at top (2 rows), data below, center dot
             return `<div id="${nodeId}" style="border:1px solid ${borderColor};background:#1f2937;border-radius:10px;padding:8% 10% 10% 10%;
                         width:22%;min-width:120px;max-width:200px;aspect-ratio:1/1;
                         box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;flex-shrink:0;position:relative">
                 <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
                     <span style="background:${dotColor};width:12px;height:12px;border-radius:50%;display:inline-block;"></span>
                 </div>
-                <div style="text-align:center;position:relative;z-index:2;margin-bottom:8px;">
-                    <span style="font-weight:600;font-size:16px;color:#f3f4f6;">${label}</span>
+                <div style="text-align:center;position:relative;z-index:2;margin-bottom:6px;">
+                    <div style="font-weight:600;font-size:14px;color:#f3f4f6;">${label}</div>
+                    <div style="font-size:10px;color:#6b7280;">${osIcon} ${n.ip}</div>
                 </div>
-                <div style="font-size:12px;color:#6b7280;position:relative;z-index:2;">
-                    <div>${osIcon} ${n.ip}</div>
+                <div style="font-size:11px;color:#6b7280;position:relative;z-index:2;">
                     ${hwHtml}
                     <div style="color:#6b7280">latency: ${latency}</div>
                     ${ctrsHtml}
