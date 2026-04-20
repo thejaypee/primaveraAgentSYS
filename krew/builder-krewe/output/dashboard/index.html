@@ -195,11 +195,16 @@
 
                 // Draw diagonal SSH connections after layout settles
                 requestAnimationFrame(() => drawDiagonals(el, [
-                    { from: 'node-k11',     to: 'node-don1',    fc: 'bl', tc: 'tr', color: rc(don1)    },
-                    { from: 'node-k11',     to: 'node-don2',    fc: 'br', tc: 'tl', color: rc(don2)    },
-                    { from: 'node-don1',    to: 'node-desktop', fc: 'br', tc: 'tl', color: rc(desktop)  },
-                    { from: 'node-don2',    to: 'node-desktop', fc: 'bl', tc: 'tr', color: rc(desktop)  },
-                    { from: 'node-don2',    to: 'node-pixel10', fc: 'br', tc: 'tr', color: rc(pixel10)  },
+                    { from: 'node-k11',      to: 'node-don1',    fc: 'bl', tc: 'tr', color: rc(don1)    },
+                    { from: 'node-k11',      to: 'node-don2',    fc: 'br', tc: 'tl', color: rc(don2)    },
+                    { from: 'node-don1',     to: 'node-desktop', fc: 'br', tc: 'tl', color: rc(desktop)  },
+                    { from: 'node-don2',     to: 'node-desktop', fc: 'bl', tc: 'tr', color: rc(desktop)  },
+                    { from: 'node-don1',     to: 'node-pixel7',  fc: 'bl', tc: 'tl', color: rc(pixel7)   },
+                    { from: 'node-don2',     to: 'node-pixel10', fc: 'br', tc: 'tr', color: rc(pixel10)  },
+                    { from: 'node-saulynode',to: 'node-pixel7',  fc: 'bl', tc: 'tr', color: rc(pixel7)   },
+                    { from: 'node-saulynode',to: 'node-pixel10', fc: 'br', tc: 'tl', color: rc(pixel10)  },
+                    { from: 'node-desktop',  to: 'node-suiplay', fc: 'bl', tc: 'tl', color: rc(suiplay)  },
+                    { from: 'node-desktop',  to: 'node-suiplay', fc: 'br', tc: 'tr', color: rc(suiplay)  },
                 ]));
             } catch(e) {
                 el.innerHTML = '<p class="text-red-400 text-sm text-center">Failed to load nodes.</p>';
