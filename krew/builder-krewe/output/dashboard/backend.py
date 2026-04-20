@@ -196,11 +196,23 @@ class HiveService:
                 "os": self_node.get("OS", ""),
                 "self": True,
             })
+        seen_names = set()
         for peer in data.get("Peer", {}).values():
             if peer.get("OS") == "iOS":
                 continue
             if peer.get("HostName") in self.EXCLUDE_HOSTS:
                 continue
+            # De-duplicate by hostname: prefer linux over windows
+            name = peer.get("HostName", "")
+            os_ = peer.get("OS", "")
+            if name in seen_names:
+                continue
+            if os_ == "windows" and any(
+                p.get("HostName") == name and p.get("OS") == "linux"
+                for p in data.get("Peer", {}).values()
+            ):
+                continue
+            seen_names.add(name)
             raw.append({
                 "name": peer.get("HostName", ""),
                 "ip": peer.get("TailscaleIPs", [""])[0],

@@ -112,58 +112,63 @@
                     !(n.name === 'DESKTOP-BVKF4TE' && n.os === 'linux')
                 );
 
-                const CARD_W = '200px';
-                const CARD_H = '200px';
+                // 3-equal-column grid, cards centered in each cell
+                const G = 'display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center';
 
-                // Row 1: K11 centered
-                let html = `<div style="display:flex;justify-content:center">
-                    <div style="width:${CARD_W}">${k11 ? nodeCard(k11) : ''}</div>
+                // Row 1: K11 in center col
+                let html = `<div style="${G}">
+                    <div></div>
+                    <div style="display:flex;justify-content:center">${k11 ? nodeCard(k11) : ''}</div>
+                    <div></div>
                 </div>`;
 
-                // Connector K11 → middle row
-                html += `<div class="vline"></div>`;
+                // Connector K11 → row 2 (under center col)
+                html += `<div style="${G}">
+                    <div></div>
+                    <div class="vline"></div>
+                    <div></div>
+                </div>`;
 
-                // Horizontal bar connecting don1–saulynode–don2
-                html += `<div style="display:flex;align-items:flex-start;justify-content:center;gap:0">
-                    <!-- don1 col -->
-                    <div class="node-col" style="width:${CARD_W}">
-                        <div style="height:20px;display:flex;align-items:flex-end;width:100%;justify-content:flex-end">
+                // Row 2: don1 | saulynode | don2 with horizontal line connecting them
+                html += `<div style="${G};position:relative">
+                    <div style="display:flex;justify-content:center;align-items:flex-start;flex-direction:column">
+                        <div style="height:20px;display:flex;align-items:center;width:100%;justify-content:flex-end;padding-right:0">
                             <div style="height:2px;background:#374151;width:50%"></div>
                         </div>
-                        ${don1 ? nodeCard(don1) : ''}
+                        <div style="display:flex;justify-content:center;width:100%">${don1 ? nodeCard(don1) : ''}</div>
                     </div>
-                    <!-- center connector + saulynode -->
-                    <div class="node-col" style="width:${CARD_W}">
-                        <div style="height:20px;display:flex;align-items:flex-end;width:100%;justify-content:center">
+                    <div style="display:flex;justify-content:center;align-items:flex-start;flex-direction:column">
+                        <div style="height:20px;display:flex;align-items:center;width:100%">
                             <div style="height:2px;background:#374151;width:100%"></div>
                         </div>
-                        ${saulynode ? nodeCard(saulynode) : ''}
+                        <div style="display:flex;justify-content:center;width:100%">${saulynode ? nodeCard(saulynode) : ''}</div>
                     </div>
-                    <!-- don2 col -->
-                    <div class="node-col" style="width:${CARD_W}">
-                        <div style="height:20px;display:flex;align-items:flex-end;width:100%;justify-content:flex-start">
+                    <div style="display:flex;justify-content:center;align-items:flex-start;flex-direction:column">
+                        <div style="height:20px;display:flex;align-items:center;width:100%;justify-content:flex-start">
                             <div style="height:2px;background:#374151;width:50%"></div>
                         </div>
-                        ${don2 ? nodeCard(don2) : ''}
+                        <div style="display:flex;justify-content:center;width:100%">${don2 ? nodeCard(don2) : ''}</div>
                     </div>
                 </div>`;
 
                 // Connector saulynode → desktop
                 if (desktop) {
-                    html += `<div style="display:flex;justify-content:center">
-                        <div style="width:${CARD_W};display:flex;justify-content:center">
-                            <div class="vline"></div>
-                        </div>
+                    html += `<div style="${G}">
+                        <div></div>
+                        <div class="vline"></div>
+                        <div></div>
                     </div>`;
-                    html += `<div style="display:flex;justify-content:center">
-                        <div style="width:${CARD_W}">${nodeCard(desktop)}</div>
+                    html += `<div style="${G}">
+                        <div></div>
+                        <div style="display:flex;justify-content:center">${nodeCard(desktop)}</div>
+                        <div></div>
                     </div>`;
                 }
 
-                // Rest row
+                // Rest: equal grid below
                 if (rest.length) {
-                    html += `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:24px;padding-top:24px;border-top:1px solid #374151">
-                        ${rest.map(n => `<div style="width:${CARD_W}">${nodeCard(n)}</div>`).join('')}
+                    html += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:28px;padding-top:24px;border-top:1px solid #374151;justify-items:center">
+                        ${rest.map(n => nodeCard(n)).join('')}
                     </div>`;
                 }
 
