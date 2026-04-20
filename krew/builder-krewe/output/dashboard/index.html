@@ -195,10 +195,11 @@
 
                 // Draw diagonal SSH connections after layout settles
                 requestAnimationFrame(() => drawDiagonals(el, [
-                    { from: 'node-k11',  to: 'node-don1',    fc: 'bl', tc: 'tr', color: rc(don1)   },
-                    { from: 'node-k11',  to: 'node-don2',    fc: 'br', tc: 'tl', color: rc(don2)   },
-                    { from: 'node-don1', to: 'node-desktop',  fc: 'br', tc: 'tl', color: rc(desktop) },
-                    { from: 'node-don2', to: 'node-desktop',  fc: 'bl', tc: 'tr', color: rc(desktop) },
+                    { from: 'node-k11',     to: 'node-don1',    fc: 'bl', tc: 'tr', color: rc(don1)    },
+                    { from: 'node-k11',     to: 'node-don2',    fc: 'br', tc: 'tl', color: rc(don2)    },
+                    { from: 'node-don1',    to: 'node-desktop', fc: 'br', tc: 'tl', color: rc(desktop)  },
+                    { from: 'node-don2',    to: 'node-desktop', fc: 'bl', tc: 'tr', color: rc(desktop)  },
+                    { from: 'node-don2',    to: 'node-pixel10', fc: 'br', tc: 'tr', color: rc(pixel10)  },
                 ]));
             } catch(e) {
                 el.innerHTML = '<p class="text-red-400 text-sm text-center">Failed to load nodes.</p>';
