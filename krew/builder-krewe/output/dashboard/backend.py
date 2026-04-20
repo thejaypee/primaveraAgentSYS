@@ -169,7 +169,10 @@ hive_svc = HiveService()
 
 @app.get("/")
 async def root():
-    return FileResponse(DASHBOARD_DIR / "index.html")
+    return FileResponse(
+        DASHBOARD_DIR / "index.html",
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @app.get("/health")
