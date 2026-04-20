@@ -1,18 +1,64 @@
 # 🏗️ PrimaVerum Infrastructure Log
 
-## 🖥️ Node: K11 NUC (Control Plane)
+## ⏱️ Current Status (as of now)
+
+| Node | Tailscale IP | LLM Service | Status |
+|------|--------------|-------------|--------|
+| sauly-1 (K11) | 100.124.208.36 | N/A (control plane) | ✅ Active |
+| don1 | 100.104.65.53 | port 8000 | ⚠️ Down — container not running |
+| don2 | 100.101.70.84 | port 8000 | ⚠️ Down — container not running |
+
+**Summary**: Tailscale fabric is operational. Both Jetson nodes are reachable. LLM services need to be started.
+
+### Quick Start (from K11)
+
+Run the service starter script:
+```bash
+./start-llm-services.sh
+```
+
+Or start manually:
+
+**don1 (Trainer):**
+```bash
+ssh don1
+cd ~/jetson-containers
+./jetson-containers run nano_llm:24.7 python3 -m nano_llm.server \
+    --api --model princeton-nlp/Sheared-LLaMA-2.7B --port 8000 --host 0.0.0.0
+```
+
+**don2 (LogicAgent):**
+```bash
+ssh don2
+cd ~/jetson-containers
+./jetson-containers run nano_llm:24.7 python3 -m nano_llm.server \
+    --api --model TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T --port 8000 --host 0.0.0.0
+```
+
+**Verify:**
+```bash
+python3 diagnose_system.py
+```
+
+---
+
+## 🖥️ Node: K11 / sauly-1 (Control Plane)
 - **Hardware**: Intel NUC (K11)
+- **Tailscale**: `100.124.208.36` (sauly-1)
 - **Role**: Co-builder workstation. Runs primaverum, the Streamlit GUI (port 8501), and orchestrates don1/don2.
-- **Access**: Local — this is where we work from.
+- **Access**: Direct — Linux dual-boot, this is where we work from.
+- **Note**: Previous Windows install (`nucbox-k11`, 100.124.194.96) offline 17d.
 
 ## 🖥️ Node: don1 (The Trainer)
 - **Hardware**: Jetson Orin Nano (8GB)
 - **OS**: L4T R36 (JetPack 6.0/6.1)
+- **Tailscale**: `100.104.65.53` (don1)
 - **Role**: Language-Logic Bridge / Voice Router
-- **Access**: SSH alias `don1` (Certs integrated)
+- **Access**: SSH alias `don1` resolves via Tailscale (or `ssh don1@100.104.65.53`)
 - **LLM Server**: Jetson Containers — vLLM container or `nano_llm`
+- ** LLM API**: OpenAI-compatible endpoint at `http://don1:8000/v1` (via Tailscale MagicDNS)
+- **Status**: ⚠️ Container not running — service unreachable on port 8000
 - **Recommended Model**: NVIDIA Nemotron 3 Nano 9B — NVIDIA's own model for Orin Nano (~9 tok/s). Alternatively Mistral 3 via vLLM.
-- **API**: OpenAI-compatible endpoint at `http://don1:8000/v1`
 - **Details**:
   - TARGET_USERSPACE_LIB_DIR_PATH=/usr/lib/aarch64-linux-gnu/nvidia
   - KERNEL_VARIANT: oot
@@ -22,14 +68,17 @@
 ## 🖥️ Node: don2 (The LogicModel)
 - **Hardware**: Jetson Orin Nano (8GB)
 - **OS**: L4T R36 (JetPack 6.0/6.1)
+- **Tailscale**: `100.101.70.84` (don2)
 - **Role**: Pure Logic Core — Tabula Rasa
-- **Access**: SSH alias `don2` (Certs integrated)
+- **Access**: SSH alias `don2` resolves via Tailscale (or `ssh don2@100.101.70.84`)
 - **LLM Server**: Jetson Containers — `jetson-containers run $(autotag nano_llm)`
+- ** LLM API**: OpenAI-compatible endpoint at `http://don2:8000/v1` (via Tailscale MagicDNS)
+- **Status**: ⚠️ Container not running — service unreachable on port 8000
 - **Recommended Models**: Smallest capable base model (not instruction-tuned) — this is the blank slate being trained
-- **API**: nano_llm exposes OpenAI-compatible endpoint at `http://don2:8000/v1`
 - **Details**:
-  - Legacy Ollama installation present — **remove it, do not use it**
   - NVMe SSD strongly recommended for swap
+
+---
 
 ## ☁️ Cloud: NVIDIA Developer API
 - **Endpoint**: `https://integrate.api.nvidia.com/v1`
@@ -80,14 +129,14 @@ Where something *runs* and where it *appears* are two different dimensions. K11 
 
 ```
 K11 (congregation point)
-  ├── don1 harness    → Trainer agent — don1 is present via primaverum
-  ├── don2 harness    → LogicAgent — EMPTY, not yet built. Don2 cannot congregate yet.
+  ├── don1 harness    → Trainer agent — don1 is present via primaverum (⚠️ container down)
+  ├── don2 harness    → LogicAgent — don2 is present via primaverum (⚠️ container down)
   ├── AI Counsel      → deliberates here when called (planned)
   ├── documentAgent   → watches and records here (defined, not yet running)
   └── message bus     → signals between nodes (repos/local-* — started, not wired up)
 ```
 
-**Don2's harness is the immediate gap.** Until it is built, don2 has no presence on K11. The LogicAgent in primaverum speaks *about* don2 but don2 itself is not here. Building the harness is what brings don2 into the congregation.
+**Current Gap:** Don1 and don2 are on Tailscale and reachable via SSH, but the LLM container services on port 8000 are not running. The harness fabric exists, but the adapters are not attached.
 
 **Isolation principle — one container, one crash domain.** Every agent runs in its own container. No single agent failure can cascade and bring down the congregation. Each container is a fault boundary.
 

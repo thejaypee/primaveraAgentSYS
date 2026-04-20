@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Krewe Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans antialiased">
+
+    <header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
+        <div class="max-w-6xl mx-auto py-4 px-6 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-white tracking-tight">Krewe Dashboard</h1>
+            <div class="flex items-center gap-4">
+                <span id="last-updated" class="text-sm text-gray-400"></span>
+                <button onclick="fetchAll()" class="px-4 py-1.5 text-sm bg-indigo-600 hover:bg-indigo-500 text-white rounded transition">
+                    Refresh
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-6 space-y-8">
+
+        <!-- Docker Containers -->
+        <section class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+            <h2 class="text-lg font-semibold text-gray-200 mb-4">Containers</h2>
+            <div id="docker-list" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <p class="text-gray-500 text-sm">Loading...</p>
+            </div>
+        </section>
+
+        <!-- GPU -->
+        <section class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+            <h2 class="text-lg font-semibold text-gray-200 mb-4">GPU</h2>
+            <div id="gpu-info" class="text-sm text-gray-400">Loading...</div>
+        </section>
+
+    </main>
+
+    <script>
+        async function fetchAll() {
+            await Promise.all([fetchContainers(), fetchGpu()]);
+            document.getElementById('last-updated').innerText = new Date().toLocaleTimeString();
+        }
+
+        async function fetchContainers() {
+            const el = document.getElementById('docker-list');
+            try {
+                const res = await fetch('/system/docker/containers');
+                const data = await res.json();
+                if (!data.containers.length) {
+                    el.innerHTML = '<p class="text-gray-500 text-sm">No running containers.</p>';
+                    return;
+                }
+                el.innerHTML = data.containers.map(c => `
+                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                        <div class="flex justify-between items-center">
+                            <span class="font-medium text-gray-100">${c.name}</span>
+                            <span class="text-xs px-2 py-0.5 rounded bg-green-900 text-green-300">${c.status}</span>
+                        </div>
+                        <div class="text-xs text-gray-400 mt-1">${c.image}</div>
+                        <div class="text-xs text-gray-600 mt-0.5">${c.id}</div>
+                    </div>
+                `).join('');
+            } catch {
+                el.innerHTML = '<p class="text-red-400 text-sm">Failed to load containers.</p>';
+            }
+        }
+
+        async function fetchGpu() {
+            const el = document.getElementById('gpu-info');
+            try {
+                const res = await fetch('/system/hardware/gpu');
+                const { metrics } = await res.json();
+                if (metrics.error) {
+                    el.innerHTML = `<span class="text-gray-500">${metrics.error}</span>`;
+                } else {
+                    el.innerHTML = `
+                        <div class="grid grid-cols-3 gap-4">
+                            <div><p class="text-gray-500 text-xs mb-1">Model</p><p class="text-gray-200">${metrics.gpu_model}</p></div>
+                            <div><p class="text-gray-500 text-xs mb-1">Utilization</p><p class="text-gray-200">${metrics.gpu_utilization_percent}%</p></div>
+                            <div><p class="text-gray-500 text-xs mb-1">Memory</p><p class="text-gray-200">${metrics.memory_used_mb} / ${metrics.memory_total_mb} MB</p></div>
+                        </div>
+                    `;
+                }
+            } catch {
+                el.innerHTML = '<span class="text-red-400">Failed to load GPU info.</span>';
+            }
+        }
+
+        fetchAll();
+        setInterval(fetchAll, 30000);
+    </script>
+
+</body>
+</html>

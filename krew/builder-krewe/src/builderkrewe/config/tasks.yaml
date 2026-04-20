@@ -1,0 +1,71 @@
+backend_development_task:
+  description: >
+    Develop the backend architecture for {topic}.
+    This involves writing the server code (e.g., Python FastAPI/Flask) that queries Docker sockets, networking interfaces, and exposes the data via REST endpoints.
+    Make sure to write clean, executable code blocks.
+  expected_output: >
+    A complete Python script containing the backend API server logic.
+  agent: senior_backend_engineer
+
+frontend_development_task:
+  description: >
+    Based on the backend architecture planned for {topic}, design and build a responsive web dashboard.
+    The dashboard must visually represent nodes, active containers, and system status.
+    Write the actual HTML, CSS (Tailwind allowed), and JS required to fetch and display the data.
+  expected_output: >
+    Complete frontend source code (HTML/JS/CSS) that connects to the backend API.
+  agent: frontend_developer
+
+assembly_and_review_task:
+  description: >
+    Review the backend and frontend code produced by the engineering team for {topic}.
+    Ensure the APIs match, the syntax is correct, and there are no glaring security issues.
+    Once verified, use your file writing tools to physically save the backend and frontend code into the `output/dashboard/` directory.
+  expected_output: >
+    A confirmation that the code has been reviewed, debugged, and successfully written to the `output/dashboard/` folder on disk.
+  agent: qa_reviewer
+
+# AI Tool Building Tasks
+analyze_tool_requirements_task:
+  description: >
+    Analyze the request: "{topic}"
+    Break this down into a concrete AI coding tool specification including:
+    1. Core functionality - what exactly should this tool do?
+    2. Required functions/classes and their signatures
+    3. External API dependencies (OpenAI, Anthropic, etc.)
+    4. Configuration requirements (env vars, config files)
+    5. File structure and naming
+    6. Expected user interaction pattern
+    Do NOT write code yet - only produce the specification document.
+  expected_output: >
+    A structured markdown specification document for the requested AI coding tool.
+  agent: requirements_analyst
+
+generate_tool_code_task:
+  description: >
+    Based on the tool specification provided, write the complete Python tool implementation.
+    Requirements:
+    - Write clean, runnable Python code with NO placeholder implementations
+    - Handle all errors gracefully with try/except
+    - Include proper imports and __main__ block for CLI usage
+    - Add docstrings for all functions
+    - Include a requirements.txt if external dependencies needed
+    - The tool should actually work when executed
+    Save the complete code to: {output_path}
+  expected_output: >
+    A working Python script saved to the specified output path, ready to execute.
+  agent: ai_coder
+
+test_and_validate_task:
+  description: >
+    Test the AI coding tool generated for "{topic}".
+    Validation steps:
+    1. Check Python syntax: python -m py_compile on the file
+    2. Verify imports can be resolved
+    3. Review logic for edge cases and error handling
+    4. Ensure the code is not boilerplate - it must do real work
+    5. Fix any issues found and update the file
+    Once validated, confirm the file is saved and ready for use in the `coding-tools/` directory.
+  expected_output: >
+    A validated, working Python script in coding-tools/ directory, or a list of bugs found with fixes applied.
+  agent: tool_validator

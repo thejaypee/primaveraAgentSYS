@@ -6,10 +6,16 @@ authors = [{ name = "Your Name", email = "you@example.com" }]
 requires-python = ">=3.10,<3.14"
 dependencies = [
     "crewai[litellm,tools]==1.14.1",
+    "anthropic>=0.20.0",
     "litellm>=1.83.0",
     "nvidia-riva-client>=2.25.1",
     "python-dotenv>=1.1.1",
     "streamlit>=1.56.0",
+    "z3-solver>=4.13.0",
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "requests",
 ]
 
 [project.scripts]
@@ -27,3 +33,10 @@ build-backend = "hatchling.build"
 
 [tool.crewai]
 type = "crew"
+
+[dependency-groups]
+dev = [
+    "fastapi>=0.136.0",
+    "pydantic>=2.11.10",
+    "uvicorn>=0.44.0",
+]
