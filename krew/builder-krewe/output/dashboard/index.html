@@ -69,8 +69,17 @@
                     const hw = n.hardware || {};
                     const hwLines = [];
                     if (hw.cpu) hwLines.push(`<div class="text-xs text-gray-300 mt-1 truncate" title="${hw.cpu}">${hw.cpu}</div>`);
-                    if (hw.cores) hwLines.push(`<div class="text-xs text-gray-500">${hw.cores} cores · ${hw.ram} · ${hw.disk}</div>`);
-                    if (hw.gpu)  hwLines.push(`<div class="text-xs text-indigo-400 truncate" title="${hw.gpu}">GPU: ${hw.gpu}</div>`);
+                    if (hw.cores) {
+                        const ramStr = hw.ram || (hw.ram_total_mb ? (hw.ram_total_mb/1024).toFixed(1)+'GB' : '');
+                        hwLines.push(`<div class="text-xs text-gray-500">${hw.cores} cores · ${ramStr} · ${hw.disk}</div>`);
+                    }
+                    if (hw.gpu) {
+                        const gpuUtil = hw.gpu_util_pct !== undefined ? ` ${hw.gpu_util_pct}%` : '';
+                        const gpuTemp = hw.gpu_temp_c !== undefined ? ` ${hw.gpu_temp_c}°C` : '';
+                        const gpuVram = hw.gpu_vram_used_mb !== undefined ? ` ${hw.gpu_vram_used_mb}/${hw.gpu_vram_total_mb}MB` : '';
+                        const power = hw.power_mw !== undefined ? ` · ${(hw.power_mw/1000).toFixed(1)}W` : '';
+                        hwLines.push(`<div class="text-xs text-indigo-400 truncate" title="${hw.gpu}">GPU${gpuUtil}${gpuTemp}${gpuVram}${power}</div>`);
+                    }
                     return `
                         <div style="border-color:${borderColor}" class="bg-gray-800 border rounded-lg p-3">
                             <div class="flex items-center gap-2 mb-1">

@@ -1,8 +1,9 @@
 import json
 import os
+import re
 import subprocess
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
@@ -40,17 +41,69 @@ class DockerService:
 
 class NetworkService:
     def get_all_interfaces(self) -> List[Dict[str, Any]]:
+        import socket
         result = []
         for name, addresses in psutil.net_if_addrs().items():
             entry = {"interface": name, "addresses": []}
             for addr in addresses:
-                import socket
                 if addr.family == socket.AF_INET:
                     entry["addresses"].append({"ip": addr.address, "netmask": addr.netmask})
                 elif addr.family == psutil.AF_LINK:
                     entry["addresses"].append({"mac": addr.address})
             result.append(entry)
         return result
+
+
+def _local_hardware() -> Dict[str, Any]:
+    cpu_line = ""
+    with open("/proc/cpuinfo") as f:
+        for line in f:
+            if "model name" in line:
+                cpu_line = line.split(":", 1)[1].strip()
+                break
+    cores = os.cpu_count() or 0
+    mem = psutil.virtual_memory()
+    ram = f"{mem.total / 1024**3:.1f}GB"
+    disk = psutil.disk_usage("/")
+    disk_str = f"{disk.total / 1024**3:.0f}G"
+
+    hw: Dict[str, Any] = {"cpu": cpu_line, "cores": cores, "ram": ram, "disk": disk_str}
+
+    # AMD GPU via sysfs
+    amd_busy = Path("/sys/class/drm/card1/device/gpu_busy_percent")
+    amd_vram_used = Path("/sys/class/drm/card1/device/mem_info_vram_used")
+    amd_vram_total = Path("/sys/class/drm/card1/device/mem_info_vram_total")
+    if amd_busy.exists():
+        try:
+            util = int(amd_busy.read_text().strip())
+            vram_used = int(amd_vram_used.read_text().strip()) // 1024**2
+            vram_total = int(amd_vram_total.read_text().strip()) // 1024**2
+            hw["gpu"] = "Radeon 780M (integrated)"
+            hw["gpu_util_pct"] = util
+            hw["gpu_vram_used_mb"] = vram_used
+            hw["gpu_vram_total_mb"] = vram_total
+        except Exception:
+            pass
+
+    return hw
+
+
+def _parse_tegrastats(line: str) -> Dict[str, Any]:
+    result: Dict[str, Any] = {}
+    m = re.search(r"RAM (\d+)/(\d+)MB", line)
+    if m:
+        result["ram_used_mb"] = int(m.group(1))
+        result["ram_total_mb"] = int(m.group(2))
+    m = re.search(r"GR3D_FREQ (\d+)%", line)
+    if m:
+        result["gpu_util_pct"] = int(m.group(1))
+    m = re.search(r"gpu@([\d.]+)C", line)
+    if m:
+        result["gpu_temp_c"] = float(m.group(1))
+    m = re.search(r"VDD_IN ([\d]+)mW", line)
+    if m:
+        result["power_mw"] = int(m.group(1))
+    return result
 
 
 class HiveService:
@@ -60,8 +113,12 @@ class HiveService:
         "100.85.15.80":  "saulynode",
         "100.96.141.26": "wsl",
     }
+    JETSON_IPS = {"100.104.65.53", "100.101.70.84"}
+    EXCLUDE_HOSTS = {"meinShafft", "stats"}
 
-    def _ssh_hardware(self, host_alias: str) -> Dict[str, Any]:
+    def _ssh_hardware(self, host_alias: str, ip: str) -> Dict[str, Any]:
+        if ip in self.JETSON_IPS:
+            return self._ssh_jetson(host_alias)
         cmd = (
             "cpu=$(grep 'model name' /proc/cpuinfo | head -1 | cut -d: -f2 | xargs); "
             "cores=$(nproc); "
@@ -76,20 +133,48 @@ class HiveService:
                 text=True, stderr=subprocess.DEVNULL
             ).strip()
             cpu, cores, ram, disk, gpu = out.split("|")
-            result = {"cpu": cpu, "cores": int(cores), "ram": ram, "disk": disk}
+            result: Dict[str, Any] = {"cpu": cpu, "cores": int(cores), "ram": ram, "disk": disk}
             if gpu:
                 result["gpu"] = gpu
             return result
         except Exception:
             return {}
 
-    def _ping(self, ip: str):
+    def _ssh_jetson(self, host_alias: str) -> Dict[str, Any]:
+        cmd = (
+            "cpu=$(grep 'model name' /proc/cpuinfo | head -1 | cut -d: -f2 | xargs); "
+            "cores=$(nproc); "
+            "disk=$(df -h / | awk 'NR==2{print $2}'); "
+            "model=$(cat /proc/device-tree/model 2>/dev/null | tr -d '\\0' || echo 'Jetson'); "
+            "teg=$(tegrastats 2>&1 | head -1); "
+            "echo \"$cpu|$cores|$disk|$model|$teg\""
+        )
+        try:
+            out = subprocess.check_output(
+                ["ssh", "-o", "ConnectTimeout=5", "-o", "BatchMode=yes", host_alias, cmd],
+                text=True, stderr=subprocess.DEVNULL
+            ).strip()
+            cpu, cores, disk, model, teg = out.split("|", 4)
+            hw: Dict[str, Any] = {
+                "cpu": cpu or model,
+                "cores": int(cores),
+                "disk": disk,
+                "gpu": "Ampere GPU (Jetson Orin Nano Super)",
+            }
+            teg_stats = _parse_tegrastats(teg)
+            if teg_stats.get("ram_total_mb"):
+                hw["ram"] = f"{teg_stats['ram_total_mb'] / 1024:.1f}GB"
+            hw.update(teg_stats)
+            return hw
+        except Exception:
+            return {}
+
+    def _ping(self, ip: str) -> Optional[float]:
         try:
             out = subprocess.check_output(
                 ["ping", "-c", "1", "-W", "1", ip],
                 stderr=subprocess.DEVNULL, text=True
             )
-            import re
             m = re.search(r"time=([\d.]+)", out)
             return round(float(m.group(1)), 1) if m else 0.0
         except subprocess.CalledProcessError:
@@ -114,6 +199,8 @@ class HiveService:
         for peer in data.get("Peer", {}).values():
             if peer.get("OS") == "iOS":
                 continue
+            if peer.get("HostName") in self.EXCLUDE_HOSTS:
+                continue
             raw.append({
                 "name": peer.get("HostName", ""),
                 "ip": peer.get("TailscaleIPs", [""])[0],
@@ -125,11 +212,13 @@ class HiveService:
         def check(node):
             if node["self"]:
                 node["latency_ms"] = 0.0
+                node["reachable"] = True
+                node["hardware"] = _local_hardware()
             else:
                 node["latency_ms"] = self._ping(node["ip"])
-            node["reachable"] = node["latency_ms"] is not None
-            alias = self.SSH_HOSTS.get(node["ip"])
-            node["hardware"] = self._ssh_hardware(alias) if alias else {}
+                node["reachable"] = node["latency_ms"] is not None
+                alias = self.SSH_HOSTS.get(node["ip"])
+                node["hardware"] = self._ssh_hardware(alias, node["ip"]) if alias else {}
             return node
 
         with ThreadPoolExecutor(max_workers=12) as ex:
@@ -141,22 +230,21 @@ class HiveService:
 
 class HardwareService:
     def get_gpu_utilization(self) -> Dict[str, Any]:
-        import subprocess
-        try:
-            out = subprocess.check_output(
-                ["nvidia-smi", "--query-gpu=name,utilization.gpu,memory.used,memory.total",
-                 "--format=csv,noheader,nounits"],
-                text=True
-            ).strip()
-            name, util, mem_used, mem_total = [x.strip() for x in out.split(",")]
-            return {
-                "gpu_model": name,
-                "gpu_utilization_percent": float(util),
-                "memory_used_mb": float(mem_used),
-                "memory_total_mb": float(mem_total),
-            }
-        except Exception:
-            return {"error": "nvidia-smi unavailable"}
+        # AMD via sysfs
+        busy = Path("/sys/class/drm/card1/device/gpu_busy_percent")
+        vram_used_p = Path("/sys/class/drm/card1/device/mem_info_vram_used")
+        vram_total_p = Path("/sys/class/drm/card1/device/mem_info_vram_total")
+        if busy.exists():
+            try:
+                return {
+                    "gpu_model": "AMD Radeon 780M",
+                    "gpu_utilization_percent": int(busy.read_text().strip()),
+                    "memory_used_mb": int(vram_used_p.read_text().strip()) // 1024**2,
+                    "memory_total_mb": int(vram_total_p.read_text().strip()) // 1024**2,
+                }
+            except Exception:
+                pass
+        return {"error": "GPU unavailable"}
 
 
 app = FastAPI(title="Krewe Dashboard API", version="1.0.0")
