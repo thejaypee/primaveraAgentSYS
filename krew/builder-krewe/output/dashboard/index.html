@@ -6,28 +6,10 @@
     <title>Krewe Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .hive-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            grid-template-rows: auto auto auto auto;
-            gap: 12px;
-            align-items: start;
-        }
-        .pos-k11       { grid-column: 2; grid-row: 1; }
-        .pos-don1      { grid-column: 1; grid-row: 2; }
-        .pos-saulynode { grid-column: 2; grid-row: 2; }
-        .pos-don2      { grid-column: 3; grid-row: 2; }
-        .pos-desktop   { grid-column: 2; grid-row: 3; }
-        .pos-rest      { grid-column: 1 / span 3; grid-row: 4; display: flex; gap: 12px; flex-wrap: wrap; }
-        .connector-v {
-            width: 2px; height: 12px; background: #374151;
-            margin: 0 auto -6px;
-        }
-        .connector-h-wrap {
-            display: flex; align-items: center; justify-content: space-between;
-            grid-column: 1 / span 3; grid-row: 2;
-            pointer-events: none; position: relative;
-        }
+        .vline { width:2px; height:20px; background:#374151; margin:0 auto; }
+        .hline-wrap { display:flex; align-items:center; justify-content:center; gap:0; }
+        .hline { height:2px; background:#374151; flex:1; }
+        .node-col { display:flex; flex-direction:column; align-items:center; }
     </style>
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans antialiased">
@@ -49,8 +31,8 @@
         <!-- Hive Topology -->
         <section class="bg-gray-900 border border-gray-800 rounded-xl p-6">
             <h2 class="text-lg font-semibold text-gray-200 mb-6">Hive Nodes</h2>
-            <div id="hive-topology" class="hive-grid">
-                <p class="text-gray-500 text-sm" style="grid-column:2">Loading...</p>
+            <div id="hive-topology">
+                <p class="text-gray-500 text-sm text-center">Loading...</p>
             </div>
         </section>
 
@@ -101,7 +83,7 @@
             const latency = n.self ? 'self' : (n.reachable ? n.latency_ms + ' ms' : 'unreachable');
 
             return `
-                <div class="${extraClass}" style="border:1px solid ${borderColor};background:#1f2937;border-radius:10px;padding:12px;min-width:0">
+                <div class="${extraClass}" style="border:1px solid ${borderColor};background:#1f2937;border-radius:10px;padding:14px;width:200px;height:200px;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-start">
                     <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
                         <span style="background:${dotColor};width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>
                         <span style="font-weight:600;font-size:13px;color:#f3f4f6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span>
@@ -118,18 +100,14 @@
                 const res = await fetch('/hive/nodes');
                 const { nodes } = await res.json();
                 if (!nodes.length) {
-                    el.innerHTML = '<p style="grid-column:2" class="text-gray-500 text-sm">No nodes found.</p>';
+                    el.innerHTML = '<p class="text-gray-500 text-sm text-center">No nodes found.</p>';
                     return;
                 }
 
-                const byName = {};
-                nodes.forEach(n => { byName[n.self ? 'sauly' : n.name] = n; });
-
-                const k11      = byName['sauly'];
-                const saulynode = byName['saulynode'];
-                const don1     = byName['don1'];
-                const don2     = byName['don2'];
-                // DESKTOP: pick by linux ip
+                const k11      = nodes.find(n => n.self);
+                const saulynode = nodes.find(n => n.name === 'saulynode');
+                const don1     = nodes.find(n => n.name === 'don1');
+                const don2     = nodes.find(n => n.name === 'don2');
                 const desktop  = nodes.find(n => n.name === 'DESKTOP-BVKF4TE' && n.os === 'linux');
                 const rest     = nodes.filter(n =>
                     !n.self &&
@@ -139,33 +117,64 @@
                     !(n.name === 'DESKTOP-BVKF4TE' && n.os === 'linux')
                 );
 
-                let html = '';
+                const CARD_W = '200px';
+                const CARD_H = '200px';
 
-                // Row 1 — K11 center
-                if (k11) html += `<div class="pos-k11">${nodeCard(k11)}</div>`;
+                // Row 1: K11 centered
+                let html = `<div style="display:flex;justify-content:center">
+                    <div style="width:${CARD_W}">${k11 ? nodeCard(k11) : ''}</div>
+                </div>`;
 
-                // Vertical connector K11 → saulynode
-                html += `<div style="grid-column:2;grid-row:1;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:none"><div style="width:2px;height:14px;background:#374151;margin:0 auto -2px"></div></div>`;
+                // Connector K11 → middle row
+                html += `<div class="vline"></div>`;
 
-                // Row 2 — don1 | saulynode | don2
-                if (don1)      html += `<div class="pos-don1">${nodeCard(don1)}</div>`;
-                if (saulynode) html += `<div class="pos-saulynode">${nodeCard(saulynode)}</div>`;
-                if (don2)      html += `<div class="pos-don2">${nodeCard(don2)}</div>`;
+                // Horizontal bar connecting don1–saulynode–don2
+                html += `<div style="display:flex;align-items:flex-start;justify-content:center;gap:0">
+                    <!-- don1 col -->
+                    <div class="node-col" style="width:${CARD_W}">
+                        <div style="height:20px;display:flex;align-items:flex-end;width:100%;justify-content:flex-end">
+                            <div style="height:2px;background:#374151;width:50%"></div>
+                        </div>
+                        ${don1 ? nodeCard(don1) : ''}
+                    </div>
+                    <!-- center connector + saulynode -->
+                    <div class="node-col" style="width:${CARD_W}">
+                        <div style="height:20px;display:flex;align-items:flex-end;width:100%;justify-content:center">
+                            <div style="height:2px;background:#374151;width:100%"></div>
+                        </div>
+                        ${saulynode ? nodeCard(saulynode) : ''}
+                    </div>
+                    <!-- don2 col -->
+                    <div class="node-col" style="width:${CARD_W}">
+                        <div style="height:20px;display:flex;align-items:flex-end;width:100%;justify-content:flex-start">
+                            <div style="height:2px;background:#374151;width:50%"></div>
+                        </div>
+                        ${don2 ? nodeCard(don2) : ''}
+                    </div>
+                </div>`;
 
-                // Vertical connector saulynode → desktop
+                // Connector saulynode → desktop
                 if (desktop) {
-                    html += `<div style="grid-column:2;grid-row:2;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:none"><div style="width:2px;height:14px;background:#374151;margin:0 auto -2px"></div></div>`;
-                    html += `<div class="pos-desktop">${nodeCard(desktop)}</div>`;
+                    html += `<div style="display:flex;justify-content:center">
+                        <div style="width:${CARD_W};display:flex;justify-content:center">
+                            <div class="vline"></div>
+                        </div>
+                    </div>`;
+                    html += `<div style="display:flex;justify-content:center">
+                        <div style="width:${CARD_W}">${nodeCard(desktop)}</div>
+                    </div>`;
                 }
 
-                // Row 4 — remaining nodes
+                // Rest row
                 if (rest.length) {
-                    html += `<div class="pos-rest">${rest.map(n => nodeCard(n, '')).join('')}</div>`;
+                    html += `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:24px;padding-top:24px;border-top:1px solid #374151">
+                        ${rest.map(n => `<div style="width:${CARD_W}">${nodeCard(n)}</div>`).join('')}
+                    </div>`;
                 }
 
                 el.innerHTML = html;
             } catch(e) {
-                el.innerHTML = '<p style="grid-column:2" class="text-red-400 text-sm">Failed to load nodes.</p>';
+                el.innerHTML = '<p class="text-red-400 text-sm text-center">Failed to load nodes.</p>';
             }
         }
 
