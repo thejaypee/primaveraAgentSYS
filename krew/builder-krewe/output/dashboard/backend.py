@@ -54,15 +54,17 @@ class NetworkService:
 
 
 class HiveService:
-    def _ping(self, ip: str) -> bool:
+    def _ping(self, ip: str):
         try:
-            subprocess.check_call(
+            out = subprocess.check_output(
                 ["ping", "-c", "1", "-W", "1", ip],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                stderr=subprocess.DEVNULL, text=True
             )
-            return True
+            import re
+            m = re.search(r"time=([\d.]+)", out)
+            return round(float(m.group(1)), 1) if m else 0.0
         except subprocess.CalledProcessError:
-            return False
+            return None
 
     def get_nodes(self) -> List[Dict[str, Any]]:
         try:
@@ -90,13 +92,17 @@ class HiveService:
 
         from concurrent.futures import ThreadPoolExecutor
         def check(node):
-            node["reachable"] = True if node["self"] else self._ping(node["ip"])
+            if node["self"]:
+                node["latency_ms"] = 0.0
+            else:
+                node["latency_ms"] = self._ping(node["ip"])
+            node["reachable"] = node["latency_ms"] is not None
             return node
 
         with ThreadPoolExecutor(max_workers=12) as ex:
             nodes = list(ex.map(check, raw))
 
-        nodes.sort(key=lambda n: (not n["reachable"], n["name"]))
+        nodes.sort(key=lambda n: (not n["reachable"], n.get("latency_ms") or 9999))
         return nodes
 
 
