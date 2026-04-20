@@ -155,7 +155,7 @@
 
                 // Long vertical connector → bottom row (Pixel7 ── suiplay ── Pixel10)
                 if (suiplay || pixel7 || pixel10) {
-                    html += `<div style="${vwrap}"><div style="width:2px;background:#374151;height:${LGAP}"></div></div>`;
+                    html += `<div style="${vwrap}"><div style="${vline}"></div></div>`;
                     html += `<div style="${row}">
                         ${pixel7  ? nodeCard(pixel7)  : `<div style="${ph}"></div>`}
                         <div style="${hline}"></div>
