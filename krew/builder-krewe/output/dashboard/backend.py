@@ -1,4 +1,6 @@
+import json
 import os
+import subprocess
 from pathlib import Path
 from typing import List, Dict, Any
 
@@ -51,6 +53,40 @@ class NetworkService:
         return result
 
 
+class HiveService:
+    def get_nodes(self) -> List[Dict[str, Any]]:
+        try:
+            out = subprocess.check_output(["tailscale", "status", "--json"], text=True)
+            data = json.loads(out)
+        except Exception:
+            return []
+
+        nodes = []
+        self_node = data.get("Self", {})
+        if self_node:
+            nodes.append({
+                "name": self_node.get("HostName", ""),
+                "ip": self_node.get("TailscaleIPs", [""])[0],
+                "os": self_node.get("OS", ""),
+                "online": self_node.get("Online", False),
+                "active": self_node.get("Active", False),
+                "self": True,
+            })
+
+        for peer in data.get("Peer", {}).values():
+            nodes.append({
+                "name": peer.get("HostName", ""),
+                "ip": peer.get("TailscaleIPs", [""])[0],
+                "os": peer.get("OS", ""),
+                "online": peer.get("Online", False),
+                "active": peer.get("Active", False),
+                "self": False,
+            })
+
+        nodes.sort(key=lambda n: (not n["online"], not n["active"], n["name"]))
+        return nodes
+
+
 class HardwareService:
     def get_gpu_utilization(self) -> Dict[str, Any]:
         import subprocess
@@ -76,6 +112,7 @@ app = FastAPI(title="Krewe Dashboard API", version="1.0.0")
 docker_svc = DockerService()
 network_svc = NetworkService()
 hardware_svc = HardwareService()
+hive_svc = HiveService()
 
 
 @app.get("/")
@@ -101,6 +138,11 @@ async def get_network_context():
 @app.get("/system/hardware/gpu")
 async def get_gpu_context():
     return {"metrics": hardware_svc.get_gpu_utilization()}
+
+
+@app.get("/hive/nodes")
+async def get_hive_nodes():
+    return {"nodes": hive_svc.get_nodes()}
 
 
 if __name__ == "__main__":

@@ -22,6 +22,14 @@
 
     <main class="max-w-6xl mx-auto p-6 space-y-8">
 
+        <!-- Hive Nodes -->
+        <section class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+            <h2 class="text-lg font-semibold text-gray-200 mb-4">Hive Nodes</h2>
+            <div id="hive-list" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                <p class="text-gray-500 text-sm col-span-full">Loading...</p>
+            </div>
+        </section>
+
         <!-- Docker Containers -->
         <section class="bg-gray-900 border border-gray-800 rounded-xl p-6">
             <h2 class="text-lg font-semibold text-gray-200 mb-4">Containers</h2>
@@ -40,8 +48,41 @@
 
     <script>
         async function fetchAll() {
-            await Promise.all([fetchContainers(), fetchGpu()]);
+            await Promise.all([fetchHiveNodes(), fetchContainers(), fetchGpu()]);
             document.getElementById('last-updated').innerText = new Date().toLocaleTimeString();
+        }
+
+        async function fetchHiveNodes() {
+            const el = document.getElementById('hive-list');
+            try {
+                const res = await fetch('/hive/nodes');
+                const { nodes } = await res.json();
+                if (!nodes.length) {
+                    el.innerHTML = '<p class="text-gray-500 text-sm col-span-full">No nodes found.</p>';
+                    return;
+                }
+                el.innerHTML = nodes.map(n => {
+                    const dot = n.online
+                        ? (n.active ? 'bg-green-400' : 'bg-yellow-400')
+                        : 'bg-gray-600';
+                    const label = n.online ? (n.active ? 'active' : 'online') : 'offline';
+                    const border = n.self ? 'border-indigo-600' : 'border-gray-700';
+                    const osIcon = { linux: '🐧', windows: '🪟', android: '📱', iOS: '📱' }[n.os] || '💻';
+                    return `
+                        <div class="bg-gray-800 border ${border} rounded-lg p-3">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="w-2 h-2 rounded-full ${dot} flex-shrink-0"></span>
+                                <span class="font-medium text-gray-100 text-sm truncate">${n.name}${n.self ? ' ✦' : ''}</span>
+                            </div>
+                            <div class="text-xs text-gray-400">${osIcon} ${n.os}</div>
+                            <div class="text-xs text-gray-500 font-mono mt-0.5">${n.ip}</div>
+                            <div class="text-xs mt-1 ${n.online ? (n.active ? 'text-green-400' : 'text-yellow-400') : 'text-gray-600'}">${label}</div>
+                        </div>
+                    `;
+                }).join('');
+            } catch {
+                el.innerHTML = '<p class="text-red-400 text-sm col-span-full">Failed to load nodes.</p>';
+            }
         }
 
         async function fetchContainers() {
