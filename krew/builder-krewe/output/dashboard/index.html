@@ -78,8 +78,17 @@
                 ).join('');
             }
 
+            const nodeId = n.self ? 'node-k11'
+                : n.name === 'don1' ? 'node-don1'
+                : n.name === 'don2' ? 'node-don2'
+                : n.name === 'saulynode' ? 'node-saulynode'
+                : (n.name === 'DESKTOP-BVKF4TE') ? 'node-desktop'
+                : /suiplay/i.test(n.name) ? 'node-suiplay'
+                : /pixel.?7/i.test(n.name) ? 'node-pixel7'
+                : /pixel.?10/i.test(n.name) ? 'node-pixel10' : '';
+
             // Card: % width, aspect-ratio keeps it square
-            return `<div style="border:1px solid ${borderColor};background:#1f2937;border-radius:10px;padding:1.2%;
+            return `<div id="${nodeId}" style="border:1px solid ${borderColor};background:#1f2937;border-radius:10px;padding:1.2%;
                         width:22%;min-width:120px;max-width:200px;aspect-ratio:1/1;
                         box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;
                         justify-content:flex-start;flex-shrink:0;position:relative;z-index:1">
@@ -181,10 +190,49 @@
                     </div>`;
                 }
 
+                el.style.position = 'relative';
                 el.innerHTML = html;
+
+                // Draw diagonal SSH connections after layout settles
+                requestAnimationFrame(() => drawDiagonals(el, [
+                    { from: 'node-k11',    to: 'node-don2',    fc: 'br', tc: 'tl', color: rc(don2)    },
+                    { from: 'node-don2',   to: 'node-desktop', fc: 'bl', tc: 'tr', color: rc(desktop)  },
+                ]));
             } catch(e) {
                 el.innerHTML = '<p class="text-red-400 text-sm text-center">Failed to load nodes.</p>';
             }
+        }
+
+        function drawDiagonals(container, connections) {
+            const old = container.querySelector('.diag-svg');
+            if (old) old.remove();
+
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.classList.add('diag-svg');
+            svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:0';
+
+            const cr = container.getBoundingClientRect();
+            const corner = (r, c) => ({
+                tl: { x: r.left - cr.left, y: r.top  - cr.top  },
+                tr: { x: r.right- cr.left, y: r.top  - cr.top  },
+                bl: { x: r.left - cr.left, y: r.bottom-cr.top  },
+                br: { x: r.right- cr.left, y: r.bottom-cr.top  },
+            })[c];
+
+            for (const { from, to, fc, tc, color } of connections) {
+                const a = document.getElementById(from);
+                const b = document.getElementById(to);
+                if (!a || !b) continue;
+                const p1 = corner(a.getBoundingClientRect(), fc);
+                const p2 = corner(b.getBoundingClientRect(), tc);
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', p1.x); line.setAttribute('y1', p1.y);
+                line.setAttribute('x2', p2.x); line.setAttribute('y2', p2.y);
+                line.setAttribute('stroke', color);
+                line.setAttribute('stroke-width', '2');
+                svg.appendChild(line);
+            }
+            container.appendChild(svg);
         }
 
         fetchAll();
