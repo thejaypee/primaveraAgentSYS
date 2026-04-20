@@ -54,6 +54,18 @@ class NetworkService:
         return result
 
 
+def _local_containers() -> List[Dict[str, Any]]:
+    try:
+        client = docker.from_env()
+        client.ping()
+        return [
+            {"name": c.name, "image": c.image.tags[0] if c.image.tags else "unknown", "status": c.status}
+            for c in client.containers.list()
+        ]
+    except Exception:
+        return []
+
+
 def _local_hardware() -> Dict[str, Any]:
     cpu_line = ""
     with open("/proc/cpuinfo") as f:
@@ -67,7 +79,8 @@ def _local_hardware() -> Dict[str, Any]:
     disk = psutil.disk_usage("/")
     disk_str = f"{disk.total / 1024**3:.0f}G"
 
-    hw: Dict[str, Any] = {"cpu": cpu_line, "cores": cores, "ram": ram, "disk": disk_str}
+    hw: Dict[str, Any] = {"cpu": cpu_line, "cores": cores, "ram": ram, "disk": disk_str,
+                          "containers": _local_containers()}
 
     # AMD GPU via sysfs
     amd_busy = Path("/sys/class/drm/card1/device/gpu_busy_percent")
@@ -125,17 +138,26 @@ class HiveService:
             "ram=$(free -m | awk 'NR==2{printf \"%.1fGB\", $2/1024}'); "
             "disk=$(df -h / | awk 'NR==2{print $2}'); "
             "gpu=$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1 || echo ''); "
-            "echo \"$cpu|$cores|$ram|$disk|$gpu\""
+            "ctrs=$(docker ps --format '{{.Names}}:::{{.Image}}:::{{.Status}}' 2>/dev/null | tr '\\n' ';;' || echo ''); "
+            "echo \"$cpu|$cores|$ram|$disk|$gpu|$ctrs\""
         )
         try:
             out = subprocess.check_output(
                 ["ssh", "-o", "ConnectTimeout=3", "-o", "BatchMode=yes", host_alias, cmd],
                 text=True, stderr=subprocess.DEVNULL
             ).strip()
-            cpu, cores, ram, disk, gpu = out.split("|")
+            cpu, cores, ram, disk, gpu, ctrs_raw = out.split("|", 5)
             result: Dict[str, Any] = {"cpu": cpu, "cores": int(cores), "ram": ram, "disk": disk}
             if gpu:
                 result["gpu"] = gpu
+            containers = []
+            for entry in ctrs_raw.split(";;"):
+                entry = entry.strip()
+                if entry:
+                    parts = entry.split(":::")
+                    if len(parts) == 3:
+                        containers.append({"name": parts[0], "image": parts[1], "status": parts[2]})
+            result["containers"] = containers
             return result
         except Exception:
             return {}
@@ -147,14 +169,15 @@ class HiveService:
             "disk=$(df -h / | awk 'NR==2{print $2}'); "
             "model=$(cat /proc/device-tree/model 2>/dev/null | tr -d '\\0' || echo 'Jetson'); "
             "teg=$(tegrastats 2>&1 | head -1); "
-            "echo \"$cpu|$cores|$disk|$model|$teg\""
+            "ctrs=$(docker ps --format '{{.Names}}:::{{.Image}}:::{{.Status}}' 2>/dev/null | tr '\\n' ';;' || echo ''); "
+            "echo \"$cpu|$cores|$disk|$model|$teg|$ctrs\""
         )
         try:
             out = subprocess.check_output(
                 ["ssh", "-o", "ConnectTimeout=5", "-o", "BatchMode=yes", host_alias, cmd],
                 text=True, stderr=subprocess.DEVNULL
             ).strip()
-            cpu, cores, disk, model, teg = out.split("|", 4)
+            cpu, cores, disk, model, teg, ctrs_raw = out.split("|", 5)
             hw: Dict[str, Any] = {
                 "cpu": cpu or model,
                 "cores": int(cores),
@@ -165,6 +188,14 @@ class HiveService:
             if teg_stats.get("ram_total_mb"):
                 hw["ram"] = f"{teg_stats['ram_total_mb'] / 1024:.1f}GB"
             hw.update(teg_stats)
+            containers = []
+            for entry in ctrs_raw.split(";;"):
+                entry = entry.strip()
+                if entry:
+                    parts = entry.split(":::")
+                    if len(parts) == 3:
+                        containers.append({"name": parts[0], "image": parts[1], "status": parts[2]})
+            hw["containers"] = containers
             return hw
         except Exception:
             return {}

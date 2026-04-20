@@ -36,20 +36,13 @@
             </div>
         </section>
 
-        <!-- Docker Containers -->
-        <section class="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <h2 class="text-lg font-semibold text-gray-200 mb-4">Containers</h2>
-            <div id="docker-list" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <p class="text-gray-500 text-sm">Loading...</p>
-            </div>
-        </section>
 
 
     </main>
 
     <script>
         async function fetchAll() {
-            await Promise.all([fetchHiveNodes(), fetchContainers()]);
+            await fetchHiveNodes();
             document.getElementById('last-updated').innerText = new Date().toLocaleTimeString();
         }
 
@@ -77,15 +70,24 @@
 
             const latency = n.self ? 'self' : (n.reachable ? n.latency_ms + ' ms' : 'unreachable');
 
+            const containers = (hw.containers || []);
+            let ctrsHtml = '';
+            if (containers.length) {
+                ctrsHtml = containers.map(c =>
+                    `<div style="font-size:9px;color:#6ee7b7;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">▶ ${c.name}</div>`
+                ).join('');
+            }
+
             return `
-                <div class="${extraClass}" style="border:1px solid ${borderColor};background:#1f2937;border-radius:10px;padding:14px;width:200px;height:200px;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-start">
+                <div class="${extraClass}" style="border:1px solid ${borderColor};background:#1f2937;border-radius:10px;padding:14px;width:200px;height:200px;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-start;position:relative;z-index:1">
                     <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
                         <span style="background:${dotColor};width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>
                         <span style="font-weight:600;font-size:13px;color:#f3f4f6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span>
                     </div>
                     <div style="font-size:10px;color:#6b7280">${osIcon} ${n.ip}</div>
                     ${hwHtml}
-                    <div style="font-size:10px;color:${labelColor};margin-top:4px">${latency}</div>
+                    ${ctrsHtml}
+                    <div style="font-size:10px;color:${labelColor};margin-top:auto;padding-top:4px">${latency}</div>
                 </div>`;
         }
 
@@ -129,25 +131,20 @@
                     <div></div>
                 </div>`;
 
-                // Row 2: don1 | saulynode | don2 with horizontal line connecting them
-                html += `<div style="${G};position:relative">
-                    <div style="display:flex;justify-content:center;align-items:flex-start;flex-direction:column">
-                        <div style="height:20px;display:flex;align-items:center;width:100%;justify-content:flex-end;padding-right:0">
-                            <div style="height:2px;background:#374151;width:50%"></div>
-                        </div>
-                        <div style="display:flex;justify-content:center;width:100%">${don1 ? nodeCard(don1) : ''}</div>
+                // Row 2: don1 | saulynode | don2
+                // Horizontal line passes through vertical center (100px) of the 200px cards
+                html += `<div style="${G};position:relative;align-items:center">
+                    <div style="position:relative;display:flex;justify-content:center;align-items:center">
+                        <div style="position:absolute;top:50%;right:0;width:50%;height:2px;background:#374151;transform:translateY(-50%)"></div>
+                        ${don1 ? nodeCard(don1) : ''}
                     </div>
-                    <div style="display:flex;justify-content:center;align-items:flex-start;flex-direction:column">
-                        <div style="height:20px;display:flex;align-items:center;width:100%">
-                            <div style="height:2px;background:#374151;width:100%"></div>
-                        </div>
-                        <div style="display:flex;justify-content:center;width:100%">${saulynode ? nodeCard(saulynode) : ''}</div>
+                    <div style="position:relative;display:flex;justify-content:center;align-items:center">
+                        <div style="position:absolute;top:50%;left:0;width:100%;height:2px;background:#374151;transform:translateY(-50%)"></div>
+                        <div style="position:relative;z-index:1">${saulynode ? nodeCard(saulynode) : ''}</div>
                     </div>
-                    <div style="display:flex;justify-content:center;align-items:flex-start;flex-direction:column">
-                        <div style="height:20px;display:flex;align-items:center;width:100%;justify-content:flex-start">
-                            <div style="height:2px;background:#374151;width:50%"></div>
-                        </div>
-                        <div style="display:flex;justify-content:center;width:100%">${don2 ? nodeCard(don2) : ''}</div>
+                    <div style="position:relative;display:flex;justify-content:center;align-items:center">
+                        <div style="position:absolute;top:50%;left:0;width:50%;height:2px;background:#374151;transform:translateY(-50%)"></div>
+                        ${don2 ? nodeCard(don2) : ''}
                     </div>
                 </div>`;
 
@@ -178,29 +175,6 @@
             }
         }
 
-        async function fetchContainers() {
-            const el = document.getElementById('docker-list');
-            try {
-                const res = await fetch('/system/docker/containers');
-                const data = await res.json();
-                if (!data.containers.length) {
-                    el.innerHTML = '<p class="text-gray-500 text-sm">No running containers.</p>';
-                    return;
-                }
-                el.innerHTML = data.containers.map(c => `
-                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                        <div class="flex justify-between items-center">
-                            <span class="font-medium text-gray-100">${c.name}</span>
-                            <span class="text-xs px-2 py-0.5 rounded bg-green-900 text-green-300">${c.status}</span>
-                        </div>
-                        <div class="text-xs text-gray-400 mt-1">${c.image}</div>
-                        <div class="text-xs text-gray-600 mt-0.5">${c.id}</div>
-                    </div>
-                `).join('');
-            } catch {
-                el.innerHTML = '<p class="text-red-400 text-sm">Failed to load containers.</p>';
-            }
-        }
 
 
         fetchAll();
