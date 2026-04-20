@@ -54,6 +54,16 @@ class NetworkService:
 
 
 class HiveService:
+    def _ping(self, ip: str) -> bool:
+        try:
+            subprocess.check_call(
+                ["ping", "-c", "1", "-W", "1", ip],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+            return True
+        except subprocess.CalledProcessError:
+            return False
+
     def get_nodes(self) -> List[Dict[str, Any]]:
         try:
             out = subprocess.check_output(["tailscale", "status", "--json"], text=True)
@@ -61,29 +71,32 @@ class HiveService:
         except Exception:
             return []
 
-        nodes = []
+        raw = []
         self_node = data.get("Self", {})
         if self_node:
-            nodes.append({
+            raw.append({
                 "name": self_node.get("HostName", ""),
                 "ip": self_node.get("TailscaleIPs", [""])[0],
                 "os": self_node.get("OS", ""),
-                "online": self_node.get("Online", False),
-                "active": self_node.get("Active", False),
                 "self": True,
             })
-
         for peer in data.get("Peer", {}).values():
-            nodes.append({
+            raw.append({
                 "name": peer.get("HostName", ""),
                 "ip": peer.get("TailscaleIPs", [""])[0],
                 "os": peer.get("OS", ""),
-                "online": peer.get("Online", False),
-                "active": peer.get("Active", False),
                 "self": False,
             })
 
-        nodes.sort(key=lambda n: (not n["online"], not n["active"], n["name"]))
+        from concurrent.futures import ThreadPoolExecutor
+        def check(node):
+            node["reachable"] = True if node["self"] else self._ping(node["ip"])
+            return node
+
+        with ThreadPoolExecutor(max_workers=12) as ex:
+            nodes = list(ex.map(check, raw))
+
+        nodes.sort(key=lambda n: (not n["reachable"], n["name"]))
         return nodes
 
 

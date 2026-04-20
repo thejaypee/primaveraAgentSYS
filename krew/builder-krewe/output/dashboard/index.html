@@ -62,10 +62,8 @@
                     return;
                 }
                 el.innerHTML = nodes.map(n => {
-                    const dot = n.online
-                        ? (n.active ? 'bg-green-400' : 'bg-yellow-400')
-                        : 'bg-gray-600';
-                    const label = n.online ? (n.active ? 'active' : 'online') : 'offline';
+                    const dot = n.reachable ? 'bg-green-400' : 'bg-gray-600';
+                    const label = n.reachable ? 'reachable' : 'unreachable';
                     const border = n.self ? 'border-indigo-600' : 'border-gray-700';
                     const osIcon = { linux: '🐧', windows: '🪟', android: '📱', iOS: '📱' }[n.os] || '💻';
                     return `
@@ -76,7 +74,7 @@
                             </div>
                             <div class="text-xs text-gray-400">${osIcon} ${n.os}</div>
                             <div class="text-xs text-gray-500 font-mono mt-0.5">${n.ip}</div>
-                            <div class="text-xs mt-1 ${n.online ? (n.active ? 'text-green-400' : 'text-yellow-400') : 'text-gray-600'}">${label}</div>
+                            <div class="text-xs mt-1 ${n.reachable ? 'text-green-400' : 'text-gray-600'}">${label}</div>
                         </div>
                     `;
                 }).join('');
