@@ -109,27 +109,33 @@
                 const don1      = nodes.find(n => n.name === 'don1');
                 const don2      = nodes.find(n => n.name === 'don2');
                 const desktop   = nodes.find(n => n.name === 'DESKTOP-BVKF4TE' && n.os === 'linux');
+                const suiplay   = nodes.find(n => n.name.toLowerCase() === 'suiplay');
+                const pixel7    = nodes.find(n => /pixel.?7/i.test(n.name));
+                const pixel10   = nodes.find(n => /pixel.?10/i.test(n.name));
                 const rest      = nodes.filter(n =>
                     !n.self &&
                     n.name !== 'saulynode' &&
                     n.name !== 'don1' &&
                     n.name !== 'don2' &&
-                    !(n.name === 'DESKTOP-BVKF4TE' && n.os === 'linux')
+                    !(n.name === 'DESKTOP-BVKF4TE' && n.os === 'linux') &&
+                    n.name.toLowerCase() !== 'suiplay' &&
+                    !/pixel.?7/i.test(n.name) &&
+                    !/pixel.?10/i.test(n.name)
                 );
 
-                // Both connectors use the same CSS length so h-gap === v-gap always
-                const GAP   = 'min(4vw,48px)';
-                const row   = `display:flex;align-items:center;justify-content:center;width:100%`;
-                const hline = `height:2px;background:#374151;width:${GAP};flex-shrink:0`;
-                const vwrap = `display:flex;justify-content:center;width:100%`;
-                const vline = `width:2px;background:#374151;height:${GAP}`;
-                // placeholder keeps row2 symmetric when a node is missing
-                const ph    = `width:22%;min-width:120px;max-width:200px;aspect-ratio:1/1;flex-shrink:0`;
+                // All connectors (h and v) use the same CSS length — equal spacing everywhere
+                const GAP    = 'min(4vw,48px)';
+                const LGAP   = 'min(12vw,144px)';  // long connector to bottom row
+                const row    = `display:flex;align-items:center;justify-content:center;width:100%`;
+                const hline  = `height:2px;background:#374151;width:${GAP};flex-shrink:0`;
+                const vwrap  = `display:flex;justify-content:center;width:100%`;
+                const vline  = `width:2px;background:#374151;height:${GAP}`;
+                const ph     = `width:22%;min-width:120px;max-width:200px;aspect-ratio:1/1;flex-shrink:0`;
 
                 // Row 1: K11 centered
                 let html = `<div style="${vwrap}">${k11 ? nodeCard(k11) : ''}</div>`;
 
-                // Vertical connector K11 → row2 (centered = always under K11 / saulynode)
+                // Vertical connector K11 → row2
                 html += `<div style="${vwrap}"><div style="${vline}"></div></div>`;
 
                 // Row 2: don1 ── saulynode ── don2
@@ -141,15 +147,27 @@
                     ${don2 ? nodeCard(don2) : `<div style="${ph}"></div>`}
                 </div>`;
 
-                // Vertical connector saulynode → desktop
+                // Vertical connector → desktop
                 if (desktop) {
                     html += `<div style="${vwrap}"><div style="${vline}"></div></div>`;
                     html += `<div style="${vwrap}">${nodeCard(desktop)}</div>`;
                 }
 
-                // Overflow nodes
+                // Long vertical connector → bottom row (Pixel7 ── suiplay ── Pixel10)
+                if (suiplay || pixel7 || pixel10) {
+                    html += `<div style="${vwrap}"><div style="width:2px;background:#374151;height:${LGAP}"></div></div>`;
+                    html += `<div style="${row}">
+                        ${pixel7  ? nodeCard(pixel7)  : `<div style="${ph}"></div>`}
+                        <div style="${hline}"></div>
+                        ${suiplay ? nodeCard(suiplay) : `<div style="${ph}"></div>`}
+                        <div style="${hline}"></div>
+                        ${pixel10 ? nodeCard(pixel10) : `<div style="${ph}"></div>`}
+                    </div>`;
+                }
+
+                // Any remaining unlisted nodes
                 if (rest.length) {
-                    html += `<div style="display:flex;flex-wrap:wrap;gap:2%;margin-top:4%;padding-top:3%;border-top:1px solid #374151;justify-content:center">
+                    html += `<div style="display:flex;flex-wrap:wrap;gap:2%;margin-top:4%;justify-content:center">
                         ${rest.map(n => nodeCard(n)).join('')}
                     </div>`;
                 }
