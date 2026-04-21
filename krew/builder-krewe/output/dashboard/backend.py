@@ -241,16 +241,24 @@ class HiveService:
         except Exception:
             return {}
 
-    def _ping(self, ip: str) -> Optional[float]:
+    def _ping(self, ip: str, count: int = 3) -> Dict[str, Any]:
+        """Ping a host and return latency stats."""
         try:
             out = subprocess.check_output(
-                ["ping", "-c", "1", "-W", "1", ip],
+                ["ping", "-c", str(count), "-W", "2", ip],
                 stderr=subprocess.DEVNULL, text=True
             )
-            m = re.search(r"time=([\d.]+)", out)
-            return round(float(m.group(1)), 1) if m else 0.0
+            m = re.search(r"rtt min/avg/max/mdev = ([\d.]+)/([\d.]+)/([\d.]+)/([\d.]+)", out)
+            if m:
+                return {
+                    "min_ms": round(float(m.group(1)), 1),
+                    "avg_ms": round(float(m.group(2)), 1),
+                    "max_ms": round(float(m.group(3)), 1),
+                    "stddev_ms": round(float(m.group(4)), 1),
+                }
+            return {"error": "parse failed"}
         except subprocess.CalledProcessError:
-            return None
+            return {"error": "timeout"}
 
     def get_nodes(self) -> List[Dict[str, Any]]:
         try:
@@ -292,6 +300,12 @@ class HiveService:
                 "self": False,
             })
 
+        # Known mobile hardware (no SSH access)
+        KNOWN_MOBILE = {
+            "pixel7":  {"cpu": "Google Tensor G2", "cores": 8, "tensor_cores": True,  "gpu": "Mali-G710 MP7"},
+            "pixel10": {"cpu": "Google Tensor G5", "cores": 8, "tensor_cores": True,  "gpu": "Mali-G725"},
+        }
+
         from concurrent.futures import ThreadPoolExecutor
         def check(node):
             if node["self"]:
@@ -300,16 +314,19 @@ class HiveService:
                 node["ssh_ok"] = True
                 node["hardware"] = _local_hardware()
             else:
-                node["latency_ms"] = self._ping(node["ip"])
+                ping_result = self._ping(node["ip"])
+                node["latency_ms"] = ping_result.get("avg_ms") if isinstance(ping_result, dict) else None
                 node["reachable"] = node["latency_ms"] is not None
                 alias = self.SSH_HOSTS.get(node["ip"])
                 if alias:
                     hw = self._ssh_hardware(alias, node["ip"])
                     node["hardware"] = hw
-                    node["ssh_ok"] = bool(hw)  # True only if SSH returned data
+                    node["ssh_ok"] = bool(hw)
                 else:
-                    node["hardware"] = {}
-                    node["ssh_ok"] = None  # no SSH configured for this node
+                    # Mobile / unknown — use static lookup if available
+                    lookup = next((v for k, v in KNOWN_MOBILE.items() if k in node["name"].lower()), {})
+                    node["hardware"] = dict(lookup) if lookup else {}
+                    node["ssh_ok"] = None
             return node
 
         with ThreadPoolExecutor(max_workers=12) as ex:
